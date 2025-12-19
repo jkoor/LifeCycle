@@ -10,6 +10,17 @@
     "@magicuidesign/mcp": {
       "command": "npx",
       "args": ["-y", "@magicuidesign/mcp@latest"]
+    },
+    "todo-for-ai": {
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@todo-for-ai/mcp@latest",
+        "--api-token",
+        "LW9x2dqHzNoAPxFvL91SXrA73SHEzboJh8R-E5Sc6ZY",
+        "--log-level",
+        "info"
+      ]
     }
   }
 }

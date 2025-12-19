@@ -1,5 +1,5 @@
-import { ComponentExample } from "@/components/component-example";
+import { CoverExample } from "@/components/preview";
 
 export default function Page() {
-return <ComponentExample />;
+  return <CoverExample />
 }
