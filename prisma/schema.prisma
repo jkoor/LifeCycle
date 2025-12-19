@@ -1,0 +1,165 @@
+// 1. 数据源配置
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// 🔐 认证模块 (Auth / User System)
+// 遵循 NextAuth.js (Auth.js) 适配器标准
+// ==========================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?   // 用户头像
+  password      String?   // 凭证登录使用的哈希密码
+  
+  accounts      Account[]
+  sessions      Session[]
+  
+  // 业务关联
+  items         Item[]
+  categories    Category[]
+  tags          Tag[]
+  usageLogs     UsageLog[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// 仅当使用第三方登录(Google/GitHub)时需要此表，建议保留
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? 
+  access_token       String? 
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 📦 核心业务模块 (Inventory System)
+// ==========================================
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  icon      String?  // 存储 Lucide 图标名称，如 "toothbrush"
+  color     String?  // 存储颜色代码，如 "#FF0000"
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  items     Item[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, name]) // 同一个用户下分类名不重复
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  items     Item[]   // 隐式多对多关系
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, name]) // 同一个用户下标签名不重复
+}
+
+model Item {
+  id               String   @id @default(cuid())
+  
+  // 1. 基础信息
+  name             String
+  image            String?  // 物品 Logo/照片 URL
+  brand            String?  // 品牌
+  price            Decimal? // 价格 (Prisma 会处理 SQLite 的精度问题)
+  note             String?  // 备注
+  
+  // 2. 状态与库存
+  stock            Int      @default(1) // 当前库存数量
+  isArchived       Boolean  @default(false) // 归档（逻辑删除）
+  
+  // 3. 生命周期关键指标
+  // 上次更换/开始使用时间 (用于计算进度)
+  lastOpenedAt     DateTime? 
+  
+  // 生命周期 (天数) - 软性周期，如“牙刷建议90天更换”
+  lifespanDays     Int?     
+  
+  // 硬性过期时间 - 绝对日期，如“牛奶 2025-10-01 过期”
+  expirationDate   DateTime? 
+  
+  // 提前通知天数 (默认 3 天)
+  notifyAdvanceDays Int     @default(3)
+  
+  // 4. 关联关系
+  categoryId       String
+  category         Category @relation(fields: [categoryId], references: [id])
+  
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  tags             Tag[]    // 关联标签表
+  logs             UsageLog[]
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+}
+
+// ==========================================
+// 📊 追踪模块 (Tracking)
+// ==========================================
+
+model UsageLog {
+  id             String      @id @default(cuid())
+  
+  action         String      // 建议使用枚举逻辑，但 SQLite 建议存 String: "OPEN", "RESTOCK", "FINISH", "EDIT"
+  changeQuantity Int         // 库存变化量，例如 +5 或 -1
+  note           String?     // 操作备注，如“双十一囤货”
+  
+  itemId         String
+  item           Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  
+  userId         String
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt      DateTime    @default(now()) // 操作发生时间
+  
+  @@index([itemId])
+  @@index([createdAt])
+}
