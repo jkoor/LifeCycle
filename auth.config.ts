@@ -13,6 +13,9 @@ import { prisma } from "@/lib/prisma"
  * - Callbacks: 会话和 JWT 回调
  */
 export const authConfig: NextAuthConfig = {
+  // Secret for JWT encryption
+  secret: process.env.AUTH_SECRET,
+
   // 使用 JWT 策略 (无服务器友好)
   session: {
     strategy: "jwt",
