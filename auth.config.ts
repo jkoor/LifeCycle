@@ -69,6 +69,11 @@ export const authConfig: NextAuthConfig = {
           return null
         }
 
+        // 确保email不为null，符合NextAuth User类型
+        if (!user.email) {
+          return null
+        }
+
         return {
           id: user.id,
           email: user.email,

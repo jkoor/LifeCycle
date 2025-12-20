@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { SessionProvider } from "@/components/providers/session-provider";
 
 const fontSans = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -21,7 +22,9 @@ export default function RootLayout({
       <body
         className="antialiased"
       >
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
         <Toaster />
       </body>
     </html>
