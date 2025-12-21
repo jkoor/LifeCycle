@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { IslandNav } from '@/components/navigation';
+import { DockNav } from '@/components/navigation';
 
 /**
  * 导航包装组件
@@ -24,5 +24,5 @@ export function NavigationWrapper() {
         return null;
     }
 
-    return <IslandNav />;
+    return <DockNav />;
 }
