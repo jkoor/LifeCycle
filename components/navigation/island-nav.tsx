@@ -61,8 +61,9 @@ export function IslandNav() {
                         const Icon = item.icon;
 
                         const navLink = (
-                            <Link href={item.href} legacyBehavior passHref>
-                                <NavigationMenuLink
+                            <NavigationMenuLink asChild>
+                                <Link
+                                    href={item.href}
                                     className={cn(
                                         // 基础样式
                                         "group inline-flex items-center justify-center gap-2",
@@ -102,7 +103,7 @@ export function IslandNav() {
                                         "group-hover:scale-110",
                                         isActive && "scale-110",
                                     )} />
-                                    {/* 移动端：仅激活时显示文字 */}
+                                    {/* 移动端:仅激活时显示文字 */}
                                     <span className={cn(
                                         "transition-all duration-300 overflow-hidden whitespace-nowrap",
                                         isActive ? "max-w-[100px] opacity-100" : "max-w-0 opacity-0",
@@ -111,8 +112,8 @@ export function IslandNav() {
                                     )}>
                                         {item.label}
                                     </span>
-                                </NavigationMenuLink>
-                            </Link>
+                                </Link>
+                            </NavigationMenuLink>
                         );
 
                         // 桌面端显示工具提示
