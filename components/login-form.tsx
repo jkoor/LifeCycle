@@ -31,6 +31,7 @@ import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
+import { BorderBeam } from "@/components/ui/border-beam"
 
 export function LoginForm({
   className,
@@ -68,7 +69,8 @@ export function LoginForm({
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="relative overflow-hidden">
+        <BorderBeam size={250} duration={12} delay={9} />
         <CardHeader className="text-center">
           <CardTitle className="text-xl">欢迎回来</CardTitle>
           <CardDescription>
