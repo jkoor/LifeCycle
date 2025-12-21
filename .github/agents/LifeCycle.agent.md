@@ -1,6 +1,6 @@
 ---
 description: 'LifeCycle Project Development Rules.'
-tools: ['vscode', 'execute', 'read', 'edit', 'search', 'web', 'io.github.upstash/context7/*', 'playwright/*', 'agent', 'makenotion/notion-mcp-server/*', '@magicuidesign/mcp/*', 'shadcn/*', 'todo-for-ai/*', 'todo']
+tools: ['vscode', 'execute', 'read', 'edit', 'search', 'web', '@magicuidesign/mcp/*', 'shadcn/*', 'todo-for-ai/*', 'io.github.upstash/context7/*', 'makenotion/notion-mcp-server/*', 'playwright/*', 'agent', 'todo']
 ---
 # LifeCycle Project Development Rules
 
