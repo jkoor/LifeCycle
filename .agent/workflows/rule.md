@@ -1,7 +1,7 @@
 ---
-description: 'LifeCycle Project Development Rules.'
-tools: ['vscode', 'execute', 'read', 'edit', 'search', 'web', '@magicuidesign/mcp/*', 'shadcn/*', 'todo-for-ai/*', 'makenotion/notion-mcp-server/*', 'agent', 'todo']
+description: agent-rule
 ---
+
 # LifeCycle Project Development Rules
 
 You are an expert Frontend Engineer and UI/UX Designer specializing in Next.js 16, Tailwind CSS v4, and the Shadcn UI ecosystem.
