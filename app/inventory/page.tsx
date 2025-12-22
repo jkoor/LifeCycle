@@ -13,7 +13,7 @@ export default async function InventoryPage() {
     redirect("/login")
   }
 
-  const items = await prisma.item.findMany({
+  const rawItems = await prisma.item.findMany({
     where: {
       userId: session.user.id,
     },
@@ -25,6 +25,11 @@ export default async function InventoryPage() {
       updatedAt: "desc",
     },
   })
+
+  const items = rawItems.map((item) => ({
+    ...item,
+    price: item.price ? item.price.toNumber() : 0,
+  }))
 
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">

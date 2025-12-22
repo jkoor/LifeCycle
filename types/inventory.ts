@@ -6,3 +6,7 @@ export type ItemWithRelations = Prisma.ItemGetPayload<{
     tags: true
   }
 }>
+
+export type InventoryItem = Omit<ItemWithRelations, "price"> & {
+  price: number
+}
