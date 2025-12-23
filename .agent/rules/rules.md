@@ -1,5 +1,5 @@
 ---
-description: agent-rule
+trigger: always_on
 ---
 
 # LifeCycle Project Development Rules

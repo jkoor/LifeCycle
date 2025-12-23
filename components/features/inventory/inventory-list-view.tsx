@@ -2,7 +2,7 @@
 
 import { InventoryItem } from "@/types/inventory"
 import { Archive, Pencil, Trash, Package, RefreshCwIcon } from "lucide-react"
-
+import { cn } from "@/lib/utils"
 
 import {
   Table,
@@ -18,11 +18,15 @@ import { Button } from "@/components/ui/button"
 
 interface InventoryListViewProps {
   items: InventoryItem[]
+  className?: string
 }
 
-export function InventoryListView({ items }: InventoryListViewProps) {
+export function InventoryListView({
+  items,
+  className,
+}: InventoryListViewProps) {
   return (
-    <div className="hidden rounded-md border md:block">
+    <div className={cn("hidden rounded-md border md:block", className)}>
       <Table>
         <TableHeader>
           <TableRow>
