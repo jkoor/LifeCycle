@@ -1,8 +1,21 @@
 "use client"
 
 import { InventoryItem } from "@/types/inventory"
-import { Archive, Pencil, Trash, Package, RefreshCwIcon } from "lucide-react"
+import {
+  Archive,
+  Pencil,
+  Trash,
+  Package,
+  RefreshCwIcon,
+  Loader2,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
+import { AddItemModal } from "./add-item-modal"
+import { deleteItem } from "@/app/actions/item"
+import { useToast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { Category } from "@prisma/client"
 
 import {
   Table,
@@ -18,13 +31,44 @@ import { Button } from "@/components/ui/button"
 
 interface InventoryListViewProps {
   items: InventoryItem[]
+  categories: Category[]
   className?: string
 }
 
 export function InventoryListView({
   items,
+  categories,
   className,
 }: InventoryListViewProps) {
+  const { toast } = useToast()
+  const router = useRouter()
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this item?")) return
+    setDeletingId(id)
+    try {
+      const res = await deleteItem(id)
+      if (res.error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: res.error,
+        })
+      } else {
+        toast({ title: "Deleted", description: "Item deleted successfully" })
+        router.refresh()
+      }
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete",
+      })
+    } finally {
+      setDeletingId(null)
+    }
+  }
   return (
     <div className={cn("hidden rounded-md border md:block", className)}>
       <Table>
@@ -80,14 +124,16 @@ export function InventoryListView({
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-ghost hover:text-primary/80 hover:bg-primary/10"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
-                  </Button>
+                  <AddItemModal item={item} categories={categories}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-ghost hover:text-primary/80 hover:bg-primary/10"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Edit</span>
+                    </Button>
+                  </AddItemModal>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -108,8 +154,14 @@ export function InventoryListView({
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                    onClick={() => handleDelete(item.id)}
+                    disabled={deletingId === item.id}
                   >
-                    <Trash className="h-4 w-4" />
+                    {deletingId === item.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash className="h-4 w-4" />
+                    )}
                     <span className="sr-only">Delete</span>
                   </Button>
                 </div>

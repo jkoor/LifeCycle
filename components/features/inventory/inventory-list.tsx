@@ -3,6 +3,7 @@
 import { InventoryItem } from "@/types/inventory"
 import { InventoryListView } from "@/components/features/inventory/inventory-list-view"
 import { InventoryGridView } from "@/components/features/inventory/inventory-grid-view"
+import { Category } from "@prisma/client"
 import {
   Empty,
   EmptyHeader,
@@ -13,17 +14,20 @@ import {
 } from "@/components/ui/empty"
 import { Button } from "@/components/ui/button"
 import { Package, Plus } from "lucide-react"
+import { AddItemModal } from "./add-item-modal"
 
 interface InventoryListProps {
   items: InventoryItem[]
   view?: string | null
   searchQuery?: string | null
+  categories: Category[]
 }
 
 export function InventoryList({
   items,
   view,
   searchQuery,
+  categories,
 }: InventoryListProps) {
   if (items.length === 0) {
     const isSearching = searchQuery && searchQuery.length > 0
@@ -45,10 +49,12 @@ export function InventoryList({
         </EmptyHeader>
         {!isSearching && (
           <EmptyContent>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              立即创建
-            </Button>
+            <AddItemModal categories={categories}>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                立即创建
+              </Button>
+            </AddItemModal>
           </EmptyContent>
         )}
       </Empty>
@@ -66,6 +72,7 @@ export function InventoryList({
       */}
       <InventoryListView
         items={items}
+        categories={categories}
         className={
           view === "table"
             ? "block" // force table: show on all screens
@@ -84,6 +91,7 @@ export function InventoryList({
       */}
       <InventoryGridView
         items={items}
+        categories={categories}
         className={
           view === "grid"
             ? "block md:block" // force grid: show on all screens

@@ -46,6 +46,12 @@ export default async function InventoryPage({ searchParams }: PageProps) {
     orderBy,
   })
 
+  // Fetch categories for the Add/Edit form
+  const categories = await prisma.category.findMany({
+    where: { userId: session.user.id },
+    orderBy: { name: "asc" },
+  })
+
   // Format items (decimal to number)
   const items = rawItems.map((item) => ({
     ...item,
@@ -55,7 +61,7 @@ export default async function InventoryPage({ searchParams }: PageProps) {
   return (
     <div className="container mx-auto p-4 md:p-6 lg:p-8 space-y-6">
       {/* Header: Title + Add Button */}
-      <InventoryHeader />
+      <InventoryHeader categories={categories} />
 
       {/* Toolbar: Search + Filters */}
       <Suspense
@@ -74,7 +80,12 @@ export default async function InventoryPage({ searchParams }: PageProps) {
         }
       >
         {/* Pass view mode if InventoryList supports it, otherwise it relies on client hooks or defaults */}
-        <InventoryList items={items} view={view} searchQuery={q} />
+        <InventoryList
+          items={items}
+          view={view}
+          searchQuery={q}
+          categories={categories}
+        />
       </Suspense>
     </div>
   )
