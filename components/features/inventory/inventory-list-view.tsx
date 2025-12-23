@@ -1,7 +1,8 @@
 "use client"
 
-import { MoreHorizontal } from "lucide-react"
 import { InventoryItem } from "@/types/inventory"
+import { Archive, Pencil, Trash, Package, RefreshCwIcon } from "lucide-react"
+
 
 import {
   Table,
@@ -14,13 +15,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 interface InventoryListViewProps {
   items: InventoryItem[]
@@ -46,7 +40,7 @@ export function InventoryListView({ items }: InventoryListViewProps) {
                 <div className="flex items-center gap-3">
                   <Avatar className="h-9 w-9 rounded-lg">
                     <AvatarImage src={item.image || ""} alt={item.name} />
-                    <AvatarFallback className="rounded-lg">
+                    <AvatarFallback>
                       {item.name.slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
@@ -81,21 +75,40 @@ export function InventoryListView({ items }: InventoryListViewProps) {
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Open menu</span>
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem>Edit item</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive">
-                      Delete item
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-ghost hover:text-primary/80 hover:bg-primary/10"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-ghost hover:text-amber-500 hover:bg-amber-100"
+                  >
+                    <RefreshCwIcon className="h-4 w-4" />
+                    <span className="sr-only">Replace</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-ghost hover:text-indigo-500 hover:bg-indigo-100"
+                  >
+                    <Archive className="h-4 w-4" />
+                    <span className="sr-only">Archive</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                  >
+                    <Trash className="h-4 w-4" />
+                    <span className="sr-only">Delete</span>
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}
