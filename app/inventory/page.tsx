@@ -74,7 +74,7 @@ export default async function InventoryPage({ searchParams }: PageProps) {
         }
       >
         {/* Pass view mode if InventoryList supports it, otherwise it relies on client hooks or defaults */}
-        <InventoryList items={items} view={view} />
+        <InventoryList items={items} view={view} searchQuery={q} />
       </Suspense>
     </div>
   )
