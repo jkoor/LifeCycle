@@ -5,15 +5,29 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
 import { zhCN } from "date-fns/locale"
-import { CalendarIcon, Loader2, Plus, X } from "lucide-react"
+import {
+  CalendarIcon,
+  Check,
+  ChevronsUpDown,
+  Loader2,
+  Plus,
+  X,
+} from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -33,11 +47,13 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
+
 import { itemFormSchema, ItemFormValues } from "@/lib/schemas/item-schema"
 import { Category } from "@prisma/client"
 import Image from "next/image"
+import { createCategory } from "@/app/actions/category"
 
 interface ItemFormProps {
   defaultValues?: Partial<ItemFormValues>
@@ -84,6 +100,28 @@ export function ItemForm({
       "tags",
       currentTags.filter((t) => t !== tag)
     )
+  }
+
+  // Category handling
+  const [categoriesState, setCategoriesState] = useState(categories)
+  const [openCategory, setOpenCategory] = useState(false)
+  const [categorySearch, setCategorySearch] = useState("")
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false)
+
+  const handleCreateCategory = async (name: string) => {
+    if (!name.trim()) return
+    setIsCreatingCategory(true)
+    const res = await createCategory(name.trim())
+    setIsCreatingCategory(false)
+
+    if (res.success && res.category) {
+      setCategoriesState([...categoriesState, res.category])
+      form.setValue("categoryId", res.category.id)
+      setOpenCategory(false)
+      setCategorySearch("")
+    } else {
+      console.error(res.error)
+    }
   }
 
   return (
@@ -157,25 +195,88 @@ export function ItemForm({
                   control={form.control}
                   name="categoryId"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel>分类</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
+                      <Popover
+                        open={openCategory}
+                        onOpenChange={setOpenCategory}
                       >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="选择分类" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {categories.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              {cat.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? categoriesState.find(
+                                    (category) => category.id === field.value
+                                  )?.name
+                                : "选择分类"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[200px] p-0" align="start">
+                          <Command>
+                            <CommandInput
+                              placeholder="搜索或新建分类..."
+                              value={categorySearch}
+                              onValueChange={setCategorySearch}
+                            />
+                            <CommandList>
+                              <CommandEmpty>
+                                <div className="flex flex-col items-center justify-center p-2 gap-2">
+                                  <p className="text-sm text-muted-foreground">
+                                    没有找到分类
+                                  </p>
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    className="w-full h-8 cursor-pointer"
+                                    disabled={isCreatingCategory}
+                                    onClick={() =>
+                                      handleCreateCategory(categorySearch)
+                                    }
+                                  >
+                                    {isCreatingCategory ? (
+                                      <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                    ) : (
+                                      <Plus className="mr-2 h-3 w-3" />
+                                    )}
+                                    创建 "{categorySearch}"
+                                  </Button>
+                                </div>
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {categoriesState.map((category) => (
+                                  <CommandItem
+                                    value={category.name}
+                                    key={category.id}
+                                    onSelect={() => {
+                                      form.setValue("categoryId", category.id)
+                                      setOpenCategory(false)
+                                    }}
+                                  >
+                                    {category.name}
+                                    <Check
+                                      className={cn(
+                                        "ml-auto",
+                                        category.id === field.value
+                                          ? "opacity-100"
+                                          : "opacity-0"
+                                      )}
+                                    />
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -400,58 +501,63 @@ export function ItemForm({
               </div>
 
               {/* Row 2: Notification Toggle */}
-              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-background">
-                <FormField
-                  control={form.control}
-                  name="notifyEnabled"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-center gap-3 space-y-0">
+              <FormField
+                control={form.control}
+                name="notifyEnabled"
+                render={({ field }) => (
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-sm font-medium">
+                        过期提醒
+                      </FormLabel>
+                      <p className="text-xs text-muted-foreground">
+                        {field.value ? "到期前自动提醒" : "已关闭提醒通知"}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      {field.value && (
+                        <FormField
+                          control={form.control}
+                          name="notifyAdvanceDays"
+                          render={({ field: daysField }) => (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">
+                                提前
+                              </span>
+                              <Select
+                                value={String(daysField.value)}
+                                onValueChange={(val) =>
+                                  daysField.onChange(Number(val))
+                                }
+                              >
+                                <FormControl>
+                                  <SelectTrigger className="h-8 w-[100px] text-xs">
+                                    <SelectValue placeholder="天数" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {[0, 1, 2, 3, 5, 7, 10, 14, 30].map((day) => (
+                                    <SelectItem key={day} value={String(day)}>
+                                      {day === 0 ? "当天" : `${day} 天`}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                        />
+                      )}
                       <FormControl>
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
-                      <div className="space-y-0.5">
-                        <FormLabel className="text-sm font-medium">
-                          过期提醒
-                        </FormLabel>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                {form.watch("notifyEnabled") && (
-                  <FormField
-                    control={form.control}
-                    name="notifyAdvanceDays"
-                    render={({ field }) => (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">
-                          提前
-                        </span>
-                        <Select
-                          value={String(field.value)}
-                          onValueChange={(val) => field.onChange(Number(val))}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="h-8 w-[100px] text-xs">
-                              <SelectValue placeholder="天数" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {[0, 1, 2, 3, 5, 7, 10, 14, 30].map((day) => (
-                              <SelectItem key={day} value={String(day)}>
-                                {day === 0 ? "当天" : `${day} 天`}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
-                  />
+                    </div>
+                  </div>
                 )}
-              </div>
+              />
             </div>
           </div>
 
@@ -475,7 +581,7 @@ export function ItemForm({
           />
         </div>
 
-        <div className="flex justify-end gap-3 sticky bottom-0 bg-background/80 backdrop-blur-sm p-4 -mx-4 -mb-4 mt-6 z-10">
+        <div className="flex justify-end gap-3 pt-6 border-t mt-6">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
               取消

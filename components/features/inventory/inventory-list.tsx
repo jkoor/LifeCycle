@@ -15,12 +15,15 @@ import {
 import { Button } from "@/components/ui/button"
 import { Package, Plus } from "lucide-react"
 import { AddItemModal } from "./add-item-modal"
+import { SortByOption, SortDirOption } from "@/app/inventory/search-params"
 
 interface InventoryListProps {
   items: InventoryItem[]
   view?: string | null
   searchQuery?: string | null
   categories: Category[]
+  sortBy?: SortByOption
+  sortDir?: SortDirOption
 }
 
 export function InventoryList({
@@ -28,6 +31,8 @@ export function InventoryList({
   view,
   searchQuery,
   categories,
+  sortBy = "remainingDays",
+  sortDir = "asc",
 }: InventoryListProps) {
   if (items.length === 0) {
     const isSearching = searchQuery && searchQuery.length > 0
@@ -73,6 +78,8 @@ export function InventoryList({
       <InventoryListView
         items={items}
         categories={categories}
+        sortBy={sortBy}
+        sortDir={sortDir}
         className={
           view === "table"
             ? "block" // force table: show on all screens

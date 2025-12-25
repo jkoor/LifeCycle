@@ -1,4 +1,5 @@
 import { InventoryItem } from "@/types/inventory"
+import { cn } from "@/lib/utils"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -58,7 +59,14 @@ export function InventoryCard({ item, categories }: InventoryCardProps) {
         <div className="grid grid-cols-1 gap-4 p-4 items-center">
           <div className="flex items-center gap-3">
             {/* Image Area */}
-            <div className="h-12 w-12 min-w-12 rounded-lg bg-muted flex items-center justify-center text-xs overflow-hidden border border-border/50">
+            <div
+              className={cn(
+                "h-12 w-12 min-w-12 rounded-lg flex items-center justify-center text-xs overflow-hidden shrink-0",
+                item.image
+                  ? "bg-transparent"
+                  : "bg-muted border border-border/50"
+              )}
+            >
               {item.image ? (
                 <img
                   src={item.image}

@@ -13,23 +13,13 @@ type PageProps = {
 }
 
 export default async function InventoryPage({ searchParams }: PageProps) {
-  const { q, sort, view } = await searchParamsCache.parse(searchParams)
+  const { q, view, sortBy, sortDir } = await searchParamsCache.parse(
+    searchParams
+  )
   const session = await auth()
 
   if (!session?.user?.id) {
     redirect("/login")
-  }
-
-  // Basic sorting logic map
-  const orderBy: any = {}
-  if (sort === "updatedAt") {
-    orderBy.updatedAt = "desc"
-  } else if (sort === "name") {
-    orderBy.name = "asc"
-  } else if (sort === "stock") {
-    orderBy.stock = "asc" // or desc depending on need, assuming low stock first? or high? keeping simple.
-  } else {
-    orderBy.updatedAt = "desc"
   }
 
   const rawItems = await prisma.item.findMany({
@@ -43,7 +33,9 @@ export default async function InventoryPage({ searchParams }: PageProps) {
       category: true,
       tags: true,
     },
-    orderBy,
+    orderBy: {
+      updatedAt: "desc",
+    },
   })
 
   // Fetch categories for the Add/Edit form
@@ -74,17 +66,18 @@ export default async function InventoryPage({ searchParams }: PageProps) {
 
       {/* Data View: Table / Grid */}
       <Suspense
-        key={JSON.stringify({ q, sort, view })} // Force re-render on params change
+        key={JSON.stringify({ q, sortBy, sortDir, view })} // Force re-render on params change
         fallback={
           <div className="h-64 w-full bg-muted/20 animate-pulse rounded-lg" />
         }
       >
-        {/* Pass view mode if InventoryList supports it, otherwise it relies on client hooks or defaults */}
         <InventoryList
           items={items}
           view={view}
           searchQuery={q}
           categories={categories}
+          sortBy={sortBy}
+          sortDir={sortDir}
         />
       </Suspense>
     </div>

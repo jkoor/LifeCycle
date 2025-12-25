@@ -103,3 +103,74 @@ export async function deleteItem(id: string) {
     return { error: "Failed to delete item" }
   }
 }
+
+export async function updateStock(id: string, delta: number) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" }
+  }
+
+  try {
+    // First get current stock
+    const item = await prisma.item.findUnique({
+      where: { id, userId: session.user.id },
+      select: { stock: true },
+    })
+
+    if (!item) {
+      return { error: "Item not found" }
+    }
+
+    const currentStock = item.stock ?? 0
+    const newStock = Math.max(0, currentStock + delta)
+
+    await prisma.item.update({
+      where: { id, userId: session.user.id },
+      data: { stock: newStock },
+    })
+
+    revalidatePath("/inventory")
+    return { success: true, stock: newStock }
+  } catch (error) {
+    console.error("Failed to update stock:", error)
+    return { error: "Failed to update stock" }
+  }
+}
+
+export async function toggleNotification(id: string, enabled: boolean) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" }
+  }
+
+  try {
+    // Get current item to preserve notifyAdvanceDays when re-enabling
+    const item = await prisma.item.findUnique({
+      where: { id, userId: session.user.id },
+      select: { notifyAdvanceDays: true },
+    })
+
+    if (!item) {
+      return { error: "Item not found" }
+    }
+
+    // When enabling, use 3 days as default if previously disabled (-1)
+    // When disabling, set to -1
+    const newNotifyDays = enabled
+      ? item.notifyAdvanceDays && item.notifyAdvanceDays > 0
+        ? item.notifyAdvanceDays
+        : 3
+      : -1
+
+    await prisma.item.update({
+      where: { id, userId: session.user.id },
+      data: { notifyAdvanceDays: newNotifyDays },
+    })
+
+    revalidatePath("/inventory")
+    return { success: true, notifyAdvanceDays: newNotifyDays }
+  } catch (error) {
+    console.error("Failed to toggle notification:", error)
+    return { error: "Failed to toggle notification" }
+  }
+}
