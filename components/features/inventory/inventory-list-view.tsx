@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { InventoryItem } from "@/types/inventory"
 import {
   Archive,
@@ -11,18 +11,35 @@ import {
   Plus,
   Bell,
   BellOff,
+  AlertTriangle,
 } from "lucide-react"
 import { RefreshCWIcon } from "@/components/ui/refresh-cw"
 import { cn } from "@/lib/utils"
 import { AddItemModal } from "./add-item-modal"
-import { deleteItem, updateStock, toggleNotification } from "@/app/actions/item"
-import { useToast } from "@/components/ui/use-toast"
+import {
+  deleteItem,
+  updateStock,
+  toggleNotification,
+  replaceItem,
+  undoReplaceItem,
+  toggleArchive,
+} from "@/app/actions/item"
+import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
 import { Category } from "@prisma/client"
 import { format, differenceInDays, addDays } from "date-fns"
 import { zhCN } from "date-fns/locale"
 import { SortByOption, SortDirOption } from "@/app/inventory/search-params"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 import {
   Table,
@@ -63,57 +80,49 @@ export function InventoryListView({
   sortDir = "asc",
   className,
 }: InventoryListViewProps) {
-  const { toast } = useToast()
+  const { toast: shadcnToast } = { toast: (props: any) => {} } // Mocking/removing usage safely if any remains
   const router = useRouter()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [updatingStockId, setUpdatingStockId] = useState<string | null>(null)
   const [updatingNotifyId, setUpdatingNotifyId] = useState<string | null>(null)
+  const [replacingId, setReplacingId] = useState<string | null>(null)
+  const [archivingId, setArchivingId] = useState<string | null>(null)
+  const [itemToDelete, setItemToDelete] = useState<string | null>(null)
 
   const handleUpdateStock = async (id: string, delta: number) => {
     setUpdatingStockId(id)
     try {
       const res = await updateStock(id, delta)
       if (res.error) {
-        toast({
-          variant: "destructive",
-          title: "错误",
-          description: res.error,
-        })
+        toast.error("更新库存失败", { description: res.error })
       } else {
         router.refresh()
       }
     } catch {
-      toast({
-        variant: "destructive",
-        title: "错误",
-        description: "更新库存失败",
-      })
+      toast.error("更新库存失败")
     } finally {
       setUpdatingStockId(null)
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("确定要删除这个物品吗？")) return
+  const handleDelete = async () => {
+    if (!itemToDelete) return
+    const id = itemToDelete
     setDeletingId(id)
+    setItemToDelete(null) // Close dialog immediately or wait? Better wait. Actually close dialog then show loading state on button?
+    // Button is inside row, dialog is global.
+    // Let's keep dialog open? No, standard is close then optimistic or loading.
+
     try {
       const res = await deleteItem(id)
       if (res.error) {
-        toast({
-          variant: "destructive",
-          title: "错误",
-          description: res.error,
-        })
+        toast.error("删除失败", { description: res.error })
       } else {
-        toast({ title: "已删除", description: "物品删除成功" })
+        toast.success("物品已删除")
         router.refresh()
       }
     } catch {
-      toast({
-        variant: "destructive",
-        title: "错误",
-        description: "删除失败",
-      })
+      toast.error("删除失败")
     } finally {
       setDeletingId(null)
     }
@@ -124,28 +133,85 @@ export function InventoryListView({
     try {
       const res = await toggleNotification(id, enabled)
       if (res.error) {
-        toast({
-          variant: "destructive",
-          title: "错误",
-          description: res.error,
-        })
+        toast.error("切换提醒失败", { description: res.error })
       } else {
-        toast({
-          title: enabled ? "已开启提醒" : "已关闭提醒",
+        toast.success(enabled ? "已开启提醒" : "已关闭提醒", {
           description: enabled
-            ? `将在过期前 ${res.notifyAdvanceDays} 天提醒您`
-            : "不再发送过期提醒",
+            ? `将在过期前 ${res.notifyAdvanceDays} 天提醒`
+            : "不再提醒",
+          action: {
+            label: "撤销",
+            onClick: async () => {
+              await toggleNotification(id, !enabled)
+              router.refresh()
+            },
+          },
         })
         router.refresh()
       }
     } catch {
-      toast({
-        variant: "destructive",
-        title: "错误",
-        description: "切换提醒失败",
-      })
+      toast.error("切换提醒失败")
     } finally {
       setUpdatingNotifyId(null)
+    }
+  }
+
+  const handleReplace = async (id: string) => {
+    setReplacingId(id)
+    try {
+      const res = await replaceItem(id)
+      if (res.error) {
+        toast.error("更换失败", { description: res.error })
+      } else {
+        toast.success("已完成更换", {
+          description: "库存 -1，日期已重置",
+          action: {
+            label: "撤销",
+            onClick: async () => {
+              // Undo replace: restore stock and date
+              if (res.previousStock !== undefined) {
+                await undoReplaceItem(
+                  id,
+                  res.previousStock,
+                  res.previousDate || null
+                )
+                router.refresh()
+              }
+            },
+          },
+        })
+        router.refresh()
+      }
+    } catch {
+      toast.error("更换失败")
+    } finally {
+      setReplacingId(null)
+    }
+  }
+
+  const handleToggleArchive = async (id: string, currentStatus: boolean) => {
+    setArchivingId(id)
+    try {
+      const newStatus = !currentStatus
+      const res = await toggleArchive(id, newStatus)
+      if (res.error) {
+        toast.error("归档失败", { description: res.error })
+      } else {
+        toast.success(newStatus ? "已归档" : "已取消归档", {
+          action: {
+            label: "撤销",
+            onClick: async () => {
+              await toggleArchive(id, currentStatus)
+              router.refresh()
+            },
+          },
+        })
+        router.refresh()
+      }
+    } catch {
+      toast.error("操作失败")
+    } finally {
+      setArchivingId(null)
     }
   }
 
@@ -479,13 +545,25 @@ export function InventoryListView({
                                       remainingDays !== null &&
                                         remainingDays < 0
                                         ? "text-destructive hover:bg-destructive hover:text-white"
-                                        : "hover:bg-primary hover:text-white"
+                                        : "hover:bg-primary hover:text-white",
+                                      replacingId === item.id && "opacity-50"
                                     )}
+                                    onClick={() => handleReplace(item.id)}
+                                    disabled={
+                                      replacingId === item.id ||
+                                      (item.stock ?? 0) < 1
+                                    }
                                   >
-                                    <RefreshCWIcon size={14} />
+                                    {replacingId === item.id ? (
+                                      <Loader2 className="size-3.5 animate-spin" />
+                                    ) : (
+                                      <RefreshCWIcon size={14} />
+                                    )}
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>更换</TooltipContent>
+                                <TooltipContent>
+                                  更换 (库存-1, 重置日期)
+                                </TooltipContent>
                               </Tooltip>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -554,12 +632,29 @@ export function InventoryListView({
                                   <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="h-7 w-7 hover:bg-indigo-500 hover:text-white"
+                                    className={cn(
+                                      "h-7 w-7 hover:bg-indigo-500 hover:text-white",
+                                      item.isArchived && "text-indigo-500",
+                                      archivingId === item.id && "opacity-50"
+                                    )}
+                                    onClick={() =>
+                                      handleToggleArchive(
+                                        item.id,
+                                        item.isArchived
+                                      )
+                                    }
+                                    disabled={archivingId === item.id}
                                   >
-                                    <Archive className="size-3.5" />
+                                    {archivingId === item.id ? (
+                                      <Loader2 className="size-3.5 animate-spin" />
+                                    ) : (
+                                      <Archive className="size-3.5" />
+                                    )}
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>归档</TooltipContent>
+                                <TooltipContent>
+                                  {item.isArchived ? "取消归档" : "归档"}
+                                </TooltipContent>
                               </Tooltip>
 
                               <Tooltip>
@@ -568,7 +663,7 @@ export function InventoryListView({
                                     variant="ghost"
                                     size="icon"
                                     className="h-7 w-7 text-destructive hover:bg-destructive hover:text-white"
-                                    onClick={() => handleDelete(item.id)}
+                                    onClick={() => setItemToDelete(item.id)}
                                     disabled={deletingId === item.id}
                                   >
                                     {deletingId === item.id ? (
@@ -592,6 +687,34 @@ export function InventoryListView({
           </AccordionItem>
         ))}
       </Accordion>
+
+      <AlertDialog
+        open={!!itemToDelete}
+        onOpenChange={(open) => !open && setItemToDelete(null)}
+      >
+        <AlertDialogContent className="sm:max-w-lg">
+          <div className="flex items-start gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-500" />
+            </div>
+            <div className="space-y-2">
+              <AlertDialogTitle>确认删除？</AlertDialogTitle>
+              <AlertDialogDescription>
+                您确定要删除此物品吗？此操作将永久删除该物品及其所有数据。该操作无法撤销。
+              </AlertDialogDescription>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              确认删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

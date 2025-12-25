@@ -104,6 +104,10 @@ export async function deleteItem(id: string) {
   }
 }
 
+export async function restoreItem(data: ItemFormValues) {
+  return createItem(data)
+}
+
 export async function updateStock(id: string, delta: number) {
   const session = await auth()
   if (!session?.user?.id) {
@@ -172,5 +176,92 @@ export async function toggleNotification(id: string, enabled: boolean) {
   } catch (error) {
     console.error("Failed to toggle notification:", error)
     return { error: "Failed to toggle notification" }
+  }
+}
+
+export async function replaceItem(id: string) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" }
+  }
+
+  try {
+    const item = await prisma.item.findUnique({
+      where: { id, userId: session.user.id },
+      select: { stock: true, lastOpenedAt: true },
+    })
+
+    if (!item) {
+      return { error: "Item not found" }
+    }
+
+    if (item.stock < 1) {
+      return { error: "库存不足，无法更换" }
+    }
+
+    const previousStock = item.stock
+    const previousDate = item.lastOpenedAt
+
+    await prisma.item.update({
+      where: { id, userId: session.user.id },
+      data: {
+        stock: item.stock - 1,
+        lastOpenedAt: new Date(),
+      },
+    })
+
+    revalidatePath("/inventory")
+    return {
+      success: true,
+      previousStock,
+      previousDate: previousDate ? previousDate.toISOString() : null,
+    }
+  } catch (error) {
+    console.error("Failed to replace item:", error)
+    return { error: "Failed to replace item" }
+  }
+}
+
+// For Undo Replace
+export async function undoReplaceItem(
+  id: string,
+  previousStock: number,
+  previousDate: string | null
+) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" }
+  }
+
+  try {
+    await prisma.item.update({
+      where: { id, userId: session.user.id },
+      data: {
+        stock: previousStock,
+        lastOpenedAt: previousDate ? new Date(previousDate) : null,
+      },
+    })
+    revalidatePath("/inventory")
+    return { success: true }
+  } catch (error) {
+    return { error: "Undo failed" }
+  }
+}
+
+export async function toggleArchive(id: string, isArchived: boolean) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" }
+  }
+
+  try {
+    await prisma.item.update({
+      where: { id, userId: session.user.id },
+      data: { isArchived },
+    })
+    revalidatePath("/inventory")
+    return { success: true }
+  } catch (error) {
+    return { error: "Failed to update archive status" }
   }
 }
