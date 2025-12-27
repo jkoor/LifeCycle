@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Tag } from "@prisma/client"
 
-interface ItemTagsListProps {
+interface ItemTagsProps {
   /** 标签列表 */
   tags?: Tag[] | null
   /** 最大显示数量 */
@@ -27,15 +27,15 @@ const sizeClasses = {
  *
  * @example
  * ```tsx
- * <ItemTagsList tags={item.tags} maxDisplay={2} />
+ * <ItemTags tags={item.tags} maxDisplay={2} />
  * ```
  */
-export function ItemTagsList({
+export function ItemTags({
   tags,
   maxDisplay = 2,
   size = "sm",
   className,
-}: ItemTagsListProps) {
+}: ItemTagsProps) {
   if (!tags || tags.length === 0) {
     return null
   }

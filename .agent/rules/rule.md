@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # AGENT_RULES.md
 
 This file provides strict guidance for the AI Agent when working with code in this repository.

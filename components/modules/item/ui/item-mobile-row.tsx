@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { InventoryItem } from "@/types/inventory"
 import { Category } from "@prisma/client"
 import { cn } from "@/lib/utils"
 import { ChevronRight, Pencil, AlertTriangle } from "lucide-react"
@@ -28,12 +27,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-import { useInventoryItem } from "../hooks/use-inventory-item"
-import { ItemAvatar, ItemStockControl, ItemActionButtons } from "../atoms"
-import { ItemStatusBadge } from "../atoms"
-import { AddItemModal } from "../add-item-modal"
+import { InventoryItem } from "../types"
+import { useItem } from "../hooks/use-item"
+import { ItemAvatar } from "./item-avatar"
+import { ItemStockControl } from "./item-stock-control"
+import { ItemStatus } from "./item-status"
+import { ItemActions } from "./item-actions"
+import { AddItemModal } from "@/components/features/inventory/add-item-modal"
 
-interface InventoryMobileRowProps {
+interface ItemMobileRowProps {
   item: InventoryItem
   categories: Category[]
   className?: string
@@ -47,11 +49,11 @@ interface InventoryMobileRowProps {
  * - 点击触发 Drawer 展示详情
  * - 触摸友好的点击区域
  */
-export function InventoryMobileRow({
+export function ItemMobileRow({
   item,
   categories,
   className,
-}: InventoryMobileRowProps) {
+}: ItemMobileRowProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const {
@@ -67,7 +69,7 @@ export function InventoryMobileRow({
     handleDelete,
     daysRemaining,
     status,
-  } = useInventoryItem(item)
+  } = useItem(item)
 
   return (
     <>
@@ -88,7 +90,7 @@ export function InventoryMobileRow({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="font-medium truncate">{item.name}</span>
-                <ItemStatusBadge item={item} />
+                <ItemStatus item={item} />
               </div>
               <div className="text-xs text-muted-foreground truncate mt-0.5">
                 {item.category?.name || "未分类"}
@@ -119,7 +121,7 @@ export function InventoryMobileRow({
             {/* 状态信息 */}
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">状态</span>
-              <ItemStatusBadge item={item} />
+              <ItemStatus item={item} />
             </div>
 
             {/* 剩余天数 */}
@@ -164,7 +166,7 @@ export function InventoryMobileRow({
             </AddItemModal>
 
             {/* 操作下拉 */}
-            <ItemActionButtons
+            <ItemActions
               variant="dropdown"
               size="md"
               isArchived={item.isArchived}

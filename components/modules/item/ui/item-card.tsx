@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { InventoryItem } from "@/types/inventory"
 import { Category } from "@prisma/client"
 import { cn } from "@/lib/utils"
+import { Pencil, AlertTriangle } from "lucide-react"
+
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Pencil } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,19 +17,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { AlertTriangle } from "lucide-react"
 
-import { useInventoryItem } from "../hooks/use-inventory-item"
-import {
-  ItemAvatar,
-  ItemStockControl,
-  ItemTagsList,
-  ItemActionButtons,
-} from "../atoms"
-import { ItemStatusBadge } from "../atoms"
-import { AddItemModal } from "../add-item-modal"
+import { InventoryItem } from "../types"
+import { useItem } from "../hooks/use-item"
+import { ItemAvatar } from "./item-avatar"
+import { ItemTags } from "./item-tags"
+import { ItemStockControl } from "./item-stock-control"
+import { ItemStatus } from "./item-status"
+import { ItemActions } from "./item-actions"
+import { AddItemModal } from "@/components/features/inventory/add-item-modal"
 
-interface InventoryCardProps {
+interface ItemCardProps {
   item: InventoryItem
   categories: Category[]
   className?: string
@@ -38,14 +36,10 @@ interface InventoryCardProps {
 /**
  * 物品卡片组件 (Grid View)
  *
- * 使用原子组件和 useInventoryItem Hook 实现，
+ * 使用原子组件和 useItem Hook 实现，
  * 逻辑统一，Loading 状态一致。
  */
-export function InventoryCard({
-  item,
-  categories,
-  className,
-}: InventoryCardProps) {
+export function ItemCard({ item, categories, className }: ItemCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const {
@@ -58,7 +52,7 @@ export function InventoryCard({
     handleToggleArchive,
     handleDelete,
     daysRemaining,
-  } = useInventoryItem(item)
+  } = useItem(item)
 
   return (
     <>
@@ -75,7 +69,7 @@ export function InventoryCard({
                 <span className="font-medium truncate" title={item.name}>
                   {item.name}
                 </span>
-                <ItemStatusBadge item={item} />
+                <ItemStatus item={item} />
               </div>
 
               {/* 第二行: 分类 + 标签 */}
@@ -83,7 +77,7 @@ export function InventoryCard({
                 <span className="truncate">
                   {item.category?.name || "未分类"}
                 </span>
-                <ItemTagsList tags={item.tags} maxDisplay={2} size="sm" />
+                <ItemTags tags={item.tags} maxDisplay={2} size="sm" />
               </div>
 
               {/* 第三行: 库存控制 + 操作按钮 */}
@@ -95,7 +89,7 @@ export function InventoryCard({
                   size="sm"
                 />
 
-                <ItemActionButtons
+                <ItemActions
                   variant="icons"
                   size="sm"
                   isArchived={item.isArchived}

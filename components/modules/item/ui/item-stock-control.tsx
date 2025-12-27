@@ -39,7 +39,7 @@ const sizeClasses = {
  *
  * @example
  * ```tsx
- * const { isUpdatingStock, handleUpdateStock } = useInventoryItem(item)
+ * const { isUpdatingStock, handleUpdateStock } = useItem(item)
  * <ItemStockControl
  *   stock={item.stock}
  *   isUpdating={isUpdatingStock}

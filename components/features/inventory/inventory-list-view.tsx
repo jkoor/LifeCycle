@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo } from "react"
-import { InventoryItem } from "@/types/inventory"
 import { cn } from "@/lib/utils"
 import { Category } from "@prisma/client"
 import { SortByOption, SortDirOption } from "@/app/inventory/search-params"
@@ -21,8 +20,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 
-import { getRemainingDays } from "./hooks/use-inventory-item"
-import { InventoryTableRow } from "./table"
+import {
+  InventoryItem,
+  getRemainingDays,
+  ItemRow,
+} from "@/components/modules/item"
 
 interface InventoryListViewProps {
   items: InventoryItem[]
@@ -175,7 +177,7 @@ export function InventoryListView({
                 </colgroup>
                 <TableBody>
                   {categoryItems.map((item) => (
-                    <InventoryTableRow
+                    <ItemRow
                       key={item.id}
                       item={item}
                       categories={categories}

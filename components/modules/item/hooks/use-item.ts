@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
-import { InventoryItem } from "@/types/inventory"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 import {
   deleteItem,
   updateStock,
@@ -10,79 +11,8 @@ import {
   undoReplaceItem,
   toggleArchive,
 } from "@/app/actions/item"
-import { toast } from "sonner"
-import { useRouter } from "next/navigation"
-import { differenceInDays, addDays } from "date-fns"
-
-/**
- * 剩余天数状态信息
- */
-export interface RemainingStatus {
-  label: string
-  color: string
-  bg: string
-}
-
-/**
- * useInventoryItem Hook 返回类型
- */
-export interface UseInventoryItemReturn {
-  // Loading 状态
-  isUpdatingStock: boolean
-  isReplacing: boolean
-  isArchiving: boolean
-  isUpdatingNotification: boolean
-  isDeleting: boolean
-
-  // 操作函数
-  handleUpdateStock: (delta: number) => Promise<void>
-  handleReplace: () => Promise<void>
-  handleToggleArchive: () => Promise<void>
-  handleToggleNotification: (enabled: boolean) => Promise<void>
-  handleDelete: () => Promise<void>
-
-  // 计算属性
-  daysRemaining: number | null
-  status: RemainingStatus | null
-  isExpired: boolean
-  isExpiringSoon: boolean
-  isLowStock: boolean
-  isOutOfStock: boolean
-}
-
-/**
- * 计算物品的剩余天数
- */
-export function getRemainingDays(item: InventoryItem): number | null {
-  if (item.expirationDate) {
-    return differenceInDays(new Date(item.expirationDate), new Date())
-  }
-  if (item.lifespanDays && item.lastOpenedAt) {
-    const expiresAt = addDays(new Date(item.lastOpenedAt), item.lifespanDays)
-    return differenceInDays(expiresAt, new Date())
-  }
-  return null
-}
-
-/**
- * 获取剩余天数的状态样式
- */
-export function getRemainingStatus(
-  days: number | null
-): RemainingStatus | null {
-  if (days === null) return null
-  if (days < 0) {
-    return { label: "已过期", color: "text-red-500", bg: "bg-red-500/10" }
-  }
-  if (days <= 7) {
-    return {
-      label: `${days} 天`,
-      color: "text-amber-500",
-      bg: "bg-amber-500/10",
-    }
-  }
-  return { label: `${days} 天`, color: "text-green-500", bg: "bg-green-500/10" }
-}
+import { InventoryItem, UseItemReturn } from "../types"
+import { getRemainingDays, getRemainingStatus } from "../utils"
 
 /**
  * 物品操作 Hook
@@ -96,14 +26,14 @@ export function getRemainingStatus(
  *
  * @example
  * ```tsx
- * const { isUpdatingStock, handleUpdateStock, daysRemaining, status } = useInventoryItem(item)
+ * const { isUpdatingStock, handleUpdateStock, daysRemaining, status } = useItem(item)
  *
  * <Button onClick={() => handleUpdateStock(1)} disabled={isUpdatingStock}>
  *   {isUpdatingStock ? <Loader2 /> : <Plus />}
  * </Button>
  * ```
  */
-export function useInventoryItem(item: InventoryItem): UseInventoryItemReturn {
+export function useItem(item: InventoryItem): UseItemReturn {
   const router = useRouter()
 
   // Loading 状态

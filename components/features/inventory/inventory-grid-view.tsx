@@ -1,8 +1,10 @@
-import { InventoryItem } from "@/types/inventory"
-import { InventoryCard, InventoryMobileRow } from "./cards"
-
 import { cn } from "@/lib/utils"
 import { Category } from "@prisma/client"
+import {
+  InventoryItem,
+  ItemCard,
+  ItemMobileRow,
+} from "@/components/modules/item"
 
 interface InventoryGridViewProps {
   items: InventoryItem[]
@@ -28,13 +30,9 @@ export function InventoryGridView({
     <div className={cn("space-y-2 block md:hidden", className)}>
       {items.map((item) =>
         variant === "card" ? (
-          <InventoryCard key={item.id} item={item} categories={categories} />
+          <ItemCard key={item.id} item={item} categories={categories} />
         ) : (
-          <InventoryMobileRow
-            key={item.id}
-            item={item}
-            categories={categories}
-          />
+          <ItemMobileRow key={item.id} item={item} categories={categories} />
         )
       )}
     </div>

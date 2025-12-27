@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { InventoryItem } from "@/types/inventory"
 import { Category } from "@prisma/client"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
@@ -22,16 +21,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-import { useInventoryItem } from "../hooks/use-inventory-item"
-import {
-  ItemAvatar,
-  ItemStockControl,
-  ItemTagsList,
-  ItemActionButtons,
-} from "../atoms"
-import { AddItemModal } from "../add-item-modal"
+import { InventoryItem } from "../types"
+import { useItem } from "../hooks/use-item"
+import { ItemAvatar } from "./item-avatar"
+import { ItemTags } from "./item-tags"
+import { ItemStockControl } from "./item-stock-control"
+import { ItemActions } from "./item-actions"
+import { AddItemModal } from "@/components/features/inventory/add-item-modal"
 
-interface InventoryTableRowProps {
+interface ItemRowProps {
   item: InventoryItem
   categories: Category[]
 }
@@ -39,13 +37,9 @@ interface InventoryTableRowProps {
 /**
  * 物品列表行组件 (Table View)
  *
- * 从 inventory-list-view.tsx 提取的行渲染逻辑，
- * 使用 useInventoryItem Hook 和原子组件。
+ * 使用 useItem Hook 和原子组件。
  */
-export function InventoryTableRow({
-  item,
-  categories,
-}: InventoryTableRowProps) {
+export function ItemRow({ item, categories }: ItemRowProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   const {
@@ -61,7 +55,7 @@ export function InventoryTableRow({
     handleDelete,
     daysRemaining,
     status,
-  } = useInventoryItem(item)
+  } = useItem(item)
 
   return (
     <>
@@ -78,7 +72,7 @@ export function InventoryTableRow({
                 <span className="text-xs text-muted-foreground truncate">
                   {item.brand || "无品牌"}
                 </span>
-                <ItemTagsList tags={item.tags} maxDisplay={2} size="sm" />
+                <ItemTags tags={item.tags} maxDisplay={2} size="sm" />
               </div>
             </div>
           </div>
@@ -132,7 +126,7 @@ export function InventoryTableRow({
               </span>
             )}
 
-            <ItemActionButtons
+            <ItemActions
               variant="icons"
               size="md"
               isNotificationEnabled={(item.notifyAdvanceDays ?? 0) > 0}
@@ -149,7 +143,7 @@ export function InventoryTableRow({
 
         {/* 操作列 */}
         <TableCell className="h-16 pl-2 pr-4 text-center">
-          <ItemActionButtons
+          <ItemActions
             variant="icons"
             size="md"
             isArchived={item.isArchived}

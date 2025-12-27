@@ -31,7 +31,7 @@ import { RefreshCWIcon } from "@/components/ui/refresh-cw"
 /**
  * 操作按钮组件属性
  */
-interface ItemActionButtonsProps {
+export interface ItemActionsProps {
   /** 显示模式: icons(图标排列) | dropdown(下拉菜单) */
   variant?: "icons" | "dropdown"
   /** 尺寸 */
@@ -93,7 +93,7 @@ function IconButtons({
   onToggleNotification,
   onDelete,
   editButton,
-}: ItemActionButtonsProps) {
+}: ItemActionsProps) {
   const { button: buttonSize, icon: iconSize } = sizeClasses[size ?? "md"]
   const isExpired =
     daysRemaining !== null && daysRemaining !== undefined && daysRemaining < 0
@@ -250,7 +250,7 @@ function DropdownButtons({
   onToggleArchive,
   onToggleNotification,
   onDelete,
-}: ItemActionButtonsProps) {
+}: ItemActionsProps) {
   const { button: buttonSize, icon: iconSize } = sizeClasses[size ?? "md"]
   const isAnyLoading =
     isReplacing || isArchiving || isUpdatingNotification || isDeleting
@@ -333,10 +333,10 @@ function DropdownButtons({
  *
  * @example
  * ```tsx
- * const { isArchiving, handleToggleArchive, ... } = useInventoryItem(item)
+ * const { isArchiving, handleToggleArchive, ... } = useItem(item)
  *
  * // 图标模式
- * <ItemActionButtons
+ * <ItemActions
  *   variant="icons"
  *   isArchived={item.isArchived}
  *   isArchiving={isArchiving}
@@ -352,14 +352,14 @@ function DropdownButtons({
  * />
  *
  * // 下拉菜单模式
- * <ItemActionButtons
+ * <ItemActions
  *   variant="dropdown"
  *   onEdit={() => openModal(item)}
  *   onDelete={() => setItemToDelete(item.id)}
  * />
  * ```
  */
-export function ItemActionButtons(props: ItemActionButtonsProps) {
+export function ItemActions(props: ItemActionsProps) {
   if (props.variant === "dropdown") {
     return <DropdownButtons {...props} />
   }
