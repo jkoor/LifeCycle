@@ -1,5 +1,20 @@
 import { differenceInDays, addDays } from "date-fns"
-import { InventoryItem, RemainingStatus } from "./types"
+import { AlertTriangle, CheckCircle, Clock, Package } from "lucide-react"
+import { InventoryItem, ItemStatusState } from "./types"
+
+// ============================================================================
+// 阈值常量
+// ============================================================================
+
+/** 即将过期警告天数阈值 */
+export const THRESHOLD_EXPIRING_SOON_DAYS = 7
+
+/** 低库存警告阈值 */
+export const THRESHOLD_LOW_STOCK = 2
+
+// ============================================================================
+// 核心状态逻辑 (Single Source of Truth)
+// ============================================================================
 
 /**
  * 计算物品的剩余天数
@@ -18,54 +33,76 @@ export function getRemainingDays(item: InventoryItem): number | null {
 }
 
 /**
- * 获取剩余天数的状态样式
+ * 获取物品的统一状态对象
  *
- * @param days - 剩余天数
- * @returns 状态信息 (label, color, bg) 或 null
+ * 这是状态逻辑的唯一入口点 (Single Source of Truth)。
+ * 所有 UI 组件和 Hooks 都应通过此函数获取状态。
+ *
+ * 优先级顺序：
+ * 1. 缺货 (stock <= 0)
+ * 2. 已过期 (daysLeft < 0)
+ * 3. 即将过期 (daysLeft <= 7)
+ * 4. 库存不足 (stock < 2)
+ * 5. 正常
+ *
+ * @param item - 物品对象
+ * @returns ItemStatusState - 标准化状态对象
  */
-export function getRemainingStatus(
-  days: number | null
-): RemainingStatus | null {
-  if (days === null) return null
-  if (days < 0) {
-    return { label: "已过期", color: "text-red-500", bg: "bg-red-500/10" }
-  }
-  if (days <= 7) {
+export function getItemStatus(item: InventoryItem): ItemStatusState {
+  const stock = item.stock ?? 0
+  const daysLeft = getRemainingDays(item)
+
+  // Priority 1: 缺货
+  if (stock <= 0) {
     return {
-      label: `${days} 天`,
-      color: "text-amber-500",
-      bg: "bg-amber-500/10",
+      key: "out_of_stock",
+      label: "缺货",
+      variant: "destructive",
+      description: "库存已用完",
+      icon: Package,
     }
   }
-  return { label: `${days} 天`, color: "text-green-500", bg: "bg-green-500/10" }
-}
 
-/**
- * 判断物品是否过期
- */
-export function isItemExpired(item: InventoryItem): boolean {
-  const days = getRemainingDays(item)
-  return days !== null && days < 0
-}
+  // Priority 2: 已过期
+  if (daysLeft !== null && daysLeft < 0) {
+    const daysOverdue = Math.abs(daysLeft)
+    return {
+      key: "expired",
+      label: "已过期",
+      variant: "destructive",
+      description: `已过期 ${daysOverdue} 天`,
+      icon: Clock,
+    }
+  }
 
-/**
- * 判断物品是否即将过期 (7天内)
- */
-export function isItemExpiringSoon(item: InventoryItem): boolean {
-  const days = getRemainingDays(item)
-  return days !== null && days >= 0 && days <= 7
-}
+  // Priority 3: 即将过期
+  if (daysLeft !== null && daysLeft <= THRESHOLD_EXPIRING_SOON_DAYS) {
+    return {
+      key: "expiring_soon",
+      label: `${daysLeft}天后过期`,
+      variant: "warning",
+      description: `距离过期还有 ${daysLeft} 天`,
+      icon: Clock,
+    }
+  }
 
-/**
- * 判断物品是否库存不足 (低于2)
- */
-export function isItemLowStock(item: InventoryItem): boolean {
-  return (item.stock ?? 0) > 0 && (item.stock ?? 0) < 2
-}
+  // Priority 4: 库存不足
+  if (stock < THRESHOLD_LOW_STOCK) {
+    return {
+      key: "low_stock",
+      label: "库存不足",
+      variant: "warning",
+      description: `仅剩 ${stock} 件`,
+      icon: AlertTriangle,
+    }
+  }
 
-/**
- * 判断物品是否缺货
- */
-export function isItemOutOfStock(item: InventoryItem): boolean {
-  return (item.stock ?? 0) <= 0
+  // Default: 正常
+  return {
+    key: "healthy",
+    label: "正常",
+    variant: "success",
+    description: daysLeft !== null ? `还有 ${daysLeft} 天` : "状态良好",
+    icon: CheckCircle,
+  }
 }

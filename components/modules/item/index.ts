@@ -2,18 +2,17 @@
 export type {
   InventoryItem,
   ItemWithRelations,
-  RemainingStatus,
+  ItemLifecycleStatus,
+  ItemStatusState,
   UseItemReturn,
 } from "./types"
 
 // Utils
 export {
   getRemainingDays,
-  getRemainingStatus,
-  isItemExpired,
-  isItemExpiringSoon,
-  isItemLowStock,
-  isItemOutOfStock,
+  getItemStatus,
+  THRESHOLD_EXPIRING_SOON_DAYS,
+  THRESHOLD_LOW_STOCK,
 } from "./utils"
 
 // Hooks

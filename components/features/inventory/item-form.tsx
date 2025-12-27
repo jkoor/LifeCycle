@@ -166,6 +166,7 @@ export function ItemForm({
                         placeholder="图片链接..."
                         className="h-8 text-xs mt-2"
                         {...field}
+                        value={field.value || ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -289,7 +290,11 @@ export function ItemForm({
                     <FormItem>
                       <FormLabel>品牌</FormLabel>
                       <FormControl>
-                        <Input placeholder="选填" {...field} />
+                        <Input
+                          placeholder="选填"
+                          {...field}
+                          value={field.value || ""}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -573,6 +578,7 @@ export function ItemForm({
                     placeholder="备注更多细节..."
                     className="resize-none min-h-[80px]"
                     {...field}
+                    value={field.value || ""}
                   />
                 </FormControl>
                 <FormMessage />

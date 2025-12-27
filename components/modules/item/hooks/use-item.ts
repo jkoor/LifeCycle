@@ -12,7 +12,7 @@ import {
   toggleArchive,
 } from "@/app/actions/item"
 import { InventoryItem, UseItemReturn } from "../types"
-import { getRemainingDays, getRemainingStatus } from "../utils"
+import { getRemainingDays, getItemStatus } from "../utils"
 
 /**
  * 物品操作 Hook
@@ -26,7 +26,7 @@ import { getRemainingDays, getRemainingStatus } from "../utils"
  *
  * @example
  * ```tsx
- * const { isUpdatingStock, handleUpdateStock, daysRemaining, status } = useItem(item)
+ * const { isUpdatingStock, handleUpdateStock, statusState } = useItem(item)
  *
  * <Button onClick={() => handleUpdateStock(1)} disabled={isUpdatingStock}>
  *   {isUpdatingStock ? <Loader2 /> : <Plus />}
@@ -37,7 +37,6 @@ export function useItem(item: InventoryItem): UseItemReturn {
   const router = useRouter()
 
   // Loading 状态
-  const [isUpdatingStock, setIsUpdatingStock] = useState(false)
   const [isReplacing, setIsReplacing] = useState(false)
   const [isArchiving, setIsArchiving] = useState(false)
   const [isUpdatingNotification, setIsUpdatingNotification] = useState(false)
@@ -45,33 +44,23 @@ export function useItem(item: InventoryItem): UseItemReturn {
 
   // 计算属性
   const daysRemaining = useMemo(() => getRemainingDays(item), [item])
-  const status = useMemo(
-    () => getRemainingStatus(daysRemaining),
-    [daysRemaining]
-  )
-  const isExpired = daysRemaining !== null && daysRemaining < 0
-  const isExpiringSoon =
-    daysRemaining !== null && daysRemaining >= 0 && daysRemaining <= 7
-  const isLowStock = (item.stock ?? 0) > 0 && (item.stock ?? 0) < 2
-  const isOutOfStock = (item.stock ?? 0) <= 0
+  const statusState = useMemo(() => getItemStatus(item), [item])
 
   /**
    * 更新库存
+   * 返回 { error?: string } 用于乐观更新的回滚判断
    */
   const handleUpdateStock = useCallback(
-    async (delta: number) => {
-      setIsUpdatingStock(true)
+    async (delta: number): Promise<{ error?: string }> => {
       try {
         const res = await updateStock(item.id, delta)
         if (res.error) {
-          toast.error("更新库存失败", { description: res.error })
-        } else {
-          router.refresh()
+          return { error: res.error }
         }
+        router.refresh()
+        return {}
       } catch {
-        toast.error("更新库存失败")
-      } finally {
-        setIsUpdatingStock(false)
+        return { error: "网络错误" }
       }
     },
     [item.id, router]
@@ -202,7 +191,6 @@ export function useItem(item: InventoryItem): UseItemReturn {
 
   return {
     // Loading 状态
-    isUpdatingStock,
     isReplacing,
     isArchiving,
     isUpdatingNotification,
@@ -217,10 +205,6 @@ export function useItem(item: InventoryItem): UseItemReturn {
 
     // 计算属性
     daysRemaining,
-    status,
-    isExpired,
-    isExpiringSoon,
-    isLowStock,
-    isOutOfStock,
+    statusState,
   }
 }

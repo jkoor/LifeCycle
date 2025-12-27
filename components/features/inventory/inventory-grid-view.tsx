@@ -1,3 +1,6 @@
+"use client"
+
+import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Category } from "@prisma/client"
 import {
@@ -5,6 +8,7 @@ import {
   ItemCard,
   ItemMobileRow,
 } from "@/components/modules/item"
+import { DeleteDialogProvider } from "@/components/common/delete-dialog-provider"
 
 interface InventoryGridViewProps {
   items: InventoryItem[]
@@ -19,6 +23,7 @@ interface InventoryGridViewProps {
  *
  * - `card` 模式：显示完整卡片，含库存控制和操作按钮
  * - `row` 模式：紧凑行显示，点击展开 Drawer 详情
+ * - 删除确认由 DeleteDialogProvider 统一处理
  */
 export function InventoryGridView({
   items,
@@ -26,15 +31,19 @@ export function InventoryGridView({
   variant = "row",
   className,
 }: InventoryGridViewProps) {
+  const router = useRouter()
+
   return (
-    <div className={cn("space-y-2 block md:hidden", className)}>
-      {items.map((item) =>
-        variant === "card" ? (
-          <ItemCard key={item.id} item={item} categories={categories} />
-        ) : (
-          <ItemMobileRow key={item.id} item={item} categories={categories} />
-        )
-      )}
-    </div>
+    <DeleteDialogProvider onDeleteSuccess={() => router.refresh()}>
+      <div className={cn("space-y-2 block md:hidden", className)}>
+        {items.map((item) =>
+          variant === "card" ? (
+            <ItemCard key={item.id} item={item} categories={categories} />
+          ) : (
+            <ItemMobileRow key={item.id} item={item} categories={categories} />
+          )
+        )}
+      </div>
+    </DeleteDialogProvider>
   )
 }

@@ -27,6 +27,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { RefreshCWIcon } from "@/components/ui/refresh-cw"
+import { ItemStatusState } from "../types"
 
 /**
  * 操作按钮组件属性
@@ -46,10 +47,10 @@ export interface ItemActionsProps {
   isNotificationEnabled?: boolean
   /** 通知提前天数 */
   notifyAdvanceDays?: number
-  /** 剩余天数 (用于更换按钮样式) */
-  daysRemaining?: number | null
   /** 库存数量 (用于更换按钮禁用状态) */
   stock?: number
+  /** 物品状态 (用于更换按钮样式) */
+  statusState?: ItemStatusState
 
   // Loading 状态
   isReplacing?: boolean
@@ -82,7 +83,7 @@ function IconButtons({
   isArchived,
   isNotificationEnabled,
   notifyAdvanceDays,
-  daysRemaining,
+  statusState,
   stock = 0,
   isReplacing,
   isArchiving,
@@ -95,8 +96,7 @@ function IconButtons({
   editButton,
 }: ItemActionsProps) {
   const { button: buttonSize, icon: iconSize } = sizeClasses[size ?? "md"]
-  const isExpired =
-    daysRemaining !== null && daysRemaining !== undefined && daysRemaining < 0
+  const isExpired = statusState?.key === "expired"
 
   return (
     <TooltipProvider>
