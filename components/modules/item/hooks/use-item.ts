@@ -10,6 +10,7 @@ import {
   replaceItem,
   undoReplaceItem,
   toggleArchive,
+  togglePin,
 } from "@/app/actions/item"
 import { InventoryItem, UseItemReturn } from "../types"
 import { getRemainingDays, getItemStatus } from "../utils"
@@ -38,6 +39,7 @@ export function useItem(item: InventoryItem): UseItemReturn {
 
   // Loading 状态
   const [isReplacing, setIsReplacing] = useState(false)
+  const [isPinning, setIsPinning] = useState(false)
   const [isArchiving, setIsArchiving] = useState(false)
   const [isUpdatingNotification, setIsUpdatingNotification] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -103,6 +105,36 @@ export function useItem(item: InventoryItem): UseItemReturn {
       setIsReplacing(false)
     }
   }, [item.id, router])
+
+  /**
+   * 切换置顶状态
+   */
+  const handleTogglePin = useCallback(async () => {
+    setIsPinning(true)
+    const currentStatus = item.isPinned
+    try {
+      const newStatus = !currentStatus
+      const res = await togglePin(item.id, newStatus)
+      if (res.error) {
+        toast.error("置顶失败", { description: res.error })
+      } else {
+        toast.success(newStatus ? "已置顶" : "已取消置顶", {
+          action: {
+            label: "撤销",
+            onClick: async () => {
+              await togglePin(item.id, currentStatus)
+              router.refresh()
+            },
+          },
+        })
+        router.refresh()
+      }
+    } catch {
+      toast.error("操作失败")
+    } finally {
+      setIsPinning(false)
+    }
+  }, [item.id, item.isPinned, router])
 
   /**
    * 切换归档状态
@@ -192,6 +224,7 @@ export function useItem(item: InventoryItem): UseItemReturn {
   return {
     // Loading 状态
     isReplacing,
+    isPinning,
     isArchiving,
     isUpdatingNotification,
     isDeleting,
@@ -199,6 +232,7 @@ export function useItem(item: InventoryItem): UseItemReturn {
     // 操作函数
     handleUpdateStock,
     handleReplace,
+    handleTogglePin,
     handleToggleArchive,
     handleToggleNotification,
     handleDelete,

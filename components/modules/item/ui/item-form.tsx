@@ -1,17 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   CalendarIcon,
   Check,
   ChevronsUpDown,
+  ImagePlus,
   Loader2,
   Lock,
   Plus,
   Unlock,
+  Upload,
   X,
 } from "lucide-react"
 
@@ -52,9 +55,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 
 import { itemFormSchema, ItemFormValues } from "@/lib/schemas/item-schema"
-import { Category } from "@prisma/client"
+import { useCategorySelect } from "../hooks"
+import type { Category } from "../types"
 import Image from "next/image"
-import { createCategory } from "@/app/actions/category"
 
 interface ItemFormProps {
   defaultValues?: Partial<ItemFormValues>
@@ -106,27 +109,31 @@ export function ItemForm({
     )
   }
 
-  // Category handling
-  const [categoriesState, setCategoriesState] = useState(categories)
-  const [openCategory, setOpenCategory] = useState(false)
-  const [categorySearch, setCategorySearch] = useState("")
-  const [isCreatingCategory, setIsCreatingCategory] = useState(false)
+  // Category handling via custom hook
+  const categorySelect = useCategorySelect({
+    initialCategories: categories,
+    onSelect: (id) => form.setValue("categoryId", id),
+  })
 
-  const handleCreateCategory = async (name: string) => {
-    if (!name.trim()) return
-    setIsCreatingCategory(true)
-    const res = await createCategory(name.trim())
-    setIsCreatingCategory(false)
+  // Drag and drop state for image upload area
+  const [isDragging, setIsDragging] = useState(false)
 
-    if (res.success && res.category) {
-      setCategoriesState([...categoriesState, res.category])
-      form.setValue("categoryId", res.category.id)
-      setOpenCategory(false)
-      setCategorySearch("")
-    } else {
-      console.error(res.error)
-    }
-  }
+  // Handle drag events for visual feedback
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    // Future: Handle file drop here
+  }, [])
 
   return (
     <Form {...form}>
@@ -141,7 +148,21 @@ export function ItemForm({
                 name="image"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="relative aspect-square w-[120px] rounded-xl border-2 border-dashed bg-muted/30 flex items-center justify-center overflow-hidden hover:bg-muted/50 transition-colors group">
+                    <motion.div
+                      className={cn(
+                        "relative aspect-square w-[120px] rounded-xl border-2 border-dashed bg-muted/30 flex items-center justify-center overflow-hidden transition-colors group cursor-pointer",
+                        isDragging
+                          ? "border-primary bg-primary/10 scale-105"
+                          : "hover:bg-muted/50"
+                      )}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      animate={{
+                        scale: isDragging ? 1.02 : 1,
+                      }}
+                      transition={{ duration: 0.2 }}
+                    >
                       {field.value ? (
                         <>
                           <Image
@@ -158,13 +179,24 @@ export function ItemForm({
                         </>
                       ) : (
                         <div className="text-center p-2">
-                          <Plus className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
-                          <span className="text-[10px] text-muted-foreground block">
-                            添加图片
-                          </span>
+                          {isDragging ? (
+                            <>
+                              <Upload className="h-6 w-6 mx-auto text-primary mb-1 animate-bounce" />
+                              <span className="text-[10px] text-primary block font-medium">
+                                释放以上传
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <ImagePlus className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
+                              <span className="text-[10px] text-muted-foreground block">
+                                拖拽或点击添加
+                              </span>
+                            </>
+                          )}
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                     <FormControl>
                       <Input
                         placeholder="图片链接..."
@@ -203,8 +235,8 @@ export function ItemForm({
                     <FormItem className="flex flex-col">
                       <FormLabel>分类</FormLabel>
                       <Popover
-                        open={openCategory}
-                        onOpenChange={setOpenCategory}
+                        open={categorySelect.open}
+                        onOpenChange={categorySelect.setOpen}
                       >
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -217,8 +249,9 @@ export function ItemForm({
                               )}
                             >
                               {field.value
-                                ? categoriesState.find(
-                                    (category) => category.id === field.value
+                                ? categorySelect.categories.find(
+                                    (category: Category) =>
+                                      category.id === field.value
                                   )?.name
                                 : "选择分类"}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -229,8 +262,8 @@ export function ItemForm({
                           <Command>
                             <CommandInput
                               placeholder="搜索或新建分类..."
-                              value={categorySearch}
-                              onValueChange={setCategorySearch}
+                              value={categorySelect.searchValue}
+                              onValueChange={categorySelect.setSearchValue}
                             />
                             <CommandList>
                               <CommandEmpty>
@@ -242,41 +275,44 @@ export function ItemForm({
                                     variant="secondary"
                                     size="sm"
                                     className="w-full h-8 cursor-pointer"
-                                    disabled={isCreatingCategory}
+                                    disabled={categorySelect.isCreating}
                                     onClick={() =>
-                                      handleCreateCategory(categorySearch)
+                                      categorySelect.handleCreate(
+                                        categorySelect.searchValue
+                                      )
                                     }
                                   >
-                                    {isCreatingCategory ? (
+                                    {categorySelect.isCreating ? (
                                       <Loader2 className="mr-2 h-3 w-3 animate-spin" />
                                     ) : (
                                       <Plus className="mr-2 h-3 w-3" />
                                     )}
-                                    创建 "{categorySearch}"
+                                    创建 "{categorySelect.searchValue}"
                                   </Button>
                                 </div>
                               </CommandEmpty>
                               <CommandGroup>
-                                {categoriesState.map((category) => (
-                                  <CommandItem
-                                    value={category.name}
-                                    key={category.id}
-                                    onSelect={() => {
-                                      form.setValue("categoryId", category.id)
-                                      setOpenCategory(false)
-                                    }}
-                                  >
-                                    {category.name}
-                                    <Check
-                                      className={cn(
-                                        "ml-auto",
-                                        category.id === field.value
-                                          ? "opacity-100"
-                                          : "opacity-0"
-                                      )}
-                                    />
-                                  </CommandItem>
-                                ))}
+                                {categorySelect.categories.map(
+                                  (category: Category) => (
+                                    <CommandItem
+                                      value={category.name}
+                                      key={category.id}
+                                      onSelect={() => {
+                                        categorySelect.handleSelect(category.id)
+                                      }}
+                                    >
+                                      {category.name}
+                                      <Check
+                                        className={cn(
+                                          "ml-auto",
+                                          category.id === field.value
+                                            ? "opacity-100"
+                                            : "opacity-0"
+                                        )}
+                                      />
+                                    </CommandItem>
+                                  )
+                                )}
                               </CommandGroup>
                             </CommandList>
                           </Command>
@@ -341,11 +377,13 @@ export function ItemForm({
                         control={form.control}
                         name="isStockFixed"
                         render={({ field: lockField }) => (
-                          <button
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon"
                             onClick={() => lockField.onChange(!lockField.value)}
                             className={cn(
-                              "p-1 rounded-md transition-colors",
+                              "h-6 w-6",
                               lockField.value
                                 ? "text-primary bg-primary/10"
                                 : "text-muted-foreground hover:text-foreground"
@@ -361,7 +399,7 @@ export function ItemForm({
                             ) : (
                               <Unlock className="h-3.5 w-3.5" />
                             )}
-                          </button>
+                          </Button>
                         )}
                       />
                     </FormLabel>
@@ -467,13 +505,15 @@ export function ItemForm({
                     className="badge badge-secondary flex items-center gap-1 bg-secondary/50 text-secondary-foreground px-2 py-0.5 rounded-full text-xs border border-secondary"
                   >
                     {tag}
-                    <button
+                    <Button
                       type="button"
+                      variant="ghost"
+                      size="icon"
                       onClick={() => handleRemoveTag(tag)}
-                      className="text-muted-foreground hover:text-foreground ml-1"
+                      className="h-4 w-4 p-0 ml-0.5 text-muted-foreground hover:text-foreground hover:bg-transparent"
                     >
                       <X className="h-3 w-3" />
-                    </button>
+                    </Button>
                   </div>
                 ))}
               </div>
@@ -579,7 +619,7 @@ export function ItemForm({
                 />
               </div>
 
-              {/* Row 2: Notification Toggle */}
+              {/* Row 2: Notification Toggle with Animation */}
               <FormField
                 control={form.control}
                 name="notifyEnabled"
@@ -595,38 +635,55 @@ export function ItemForm({
                     </div>
 
                     <div className="flex items-center gap-4">
-                      {field.value && (
-                        <FormField
-                          control={form.control}
-                          name="notifyAdvanceDays"
-                          render={({ field: daysField }) => (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground">
-                                提前
-                              </span>
-                              <Select
-                                value={String(daysField.value)}
-                                onValueChange={(val) =>
-                                  daysField.onChange(Number(val))
-                                }
-                              >
-                                <FormControl>
-                                  <SelectTrigger className="h-8 w-[100px] text-xs">
-                                    <SelectValue placeholder="天数" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {[0, 1, 2, 3, 5, 7, 10, 14, 30].map((day) => (
-                                    <SelectItem key={day} value={String(day)}>
-                                      {day === 0 ? "当天" : `${day} 天`}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )}
-                        />
-                      )}
+                      <AnimatePresence mode="wait">
+                        {field.value && (
+                          <motion.div
+                            initial={{ opacity: 0, x: 20, scale: 0.95 }}
+                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                            exit={{ opacity: 0, x: 20, scale: 0.95 }}
+                            transition={{
+                              duration: 0.2,
+                              ease: "easeOut",
+                            }}
+                          >
+                            <FormField
+                              control={form.control}
+                              name="notifyAdvanceDays"
+                              render={({ field: daysField }) => (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">
+                                    提前
+                                  </span>
+                                  <Select
+                                    value={String(daysField.value)}
+                                    onValueChange={(val) =>
+                                      daysField.onChange(Number(val))
+                                    }
+                                  >
+                                    <FormControl>
+                                      <SelectTrigger className="h-8 w-[100px] text-xs">
+                                        <SelectValue placeholder="天数" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {[0, 1, 2, 3, 5, 7, 10, 14, 30].map(
+                                        (day) => (
+                                          <SelectItem
+                                            key={day}
+                                            value={String(day)}
+                                          >
+                                            {day === 0 ? "当天" : `${day} 天`}
+                                          </SelectItem>
+                                        )
+                                      )}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              )}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                       <FormControl>
                         <Switch
                           checked={field.value}

@@ -37,11 +37,13 @@ export function ItemRow({ item, categories }: ItemRowProps) {
 
   const {
     isReplacing,
+    isPinning,
     isArchiving,
     isUpdatingNotification,
     isDeleting,
     handleUpdateStock,
     handleReplace,
+    handleTogglePin,
     handleToggleArchive,
     handleToggleNotification,
     statusState,
@@ -132,13 +134,10 @@ export function ItemRow({ item, categories }: ItemRowProps) {
               statusState={statusState}
               stock={item.stock ?? 0}
               onReplace={handleReplace}
-              // Pin 功能预留（暂无后端实现）
-              isPinned={false}
-              isPinning={false}
-              onTogglePin={() => {
-                // TODO: 实现 handleTogglePin
-                console.log("Pin toggle clicked - not yet implemented")
-              }}
+              // 置顶功能
+              isPinned={item.isPinned}
+              isPinning={isPinning}
+              onTogglePin={handleTogglePin}
               isNotificationEnabled={(item.notifyAdvanceDays ?? 0) > 0}
               notifyAdvanceDays={item.notifyAdvanceDays}
               isUpdatingNotification={isUpdatingNotification}

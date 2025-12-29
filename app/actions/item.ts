@@ -267,3 +267,21 @@ export async function toggleArchive(id: string, isArchived: boolean) {
     return { error: "Failed to update archive status" }
   }
 }
+
+export async function togglePin(id: string, isPinned: boolean) {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" }
+  }
+
+  try {
+    await prisma.item.update({
+      where: { id, userId: session.user.id },
+      data: { isPinned },
+    })
+    revalidatePath("/inventory")
+    return { success: true }
+  } catch (error) {
+    return { error: "Failed to update pin status" }
+  }
+}

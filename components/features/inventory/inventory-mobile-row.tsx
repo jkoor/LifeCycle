@@ -7,6 +7,7 @@ import {
   Pencil,
   Bell,
   BellOff,
+  Pin,
   PinOff,
   Loader2,
 } from "lucide-react"
@@ -62,11 +63,13 @@ export function ItemMobileRow({
 
   const {
     isReplacing,
+    isPinning,
     isArchiving,
     isUpdatingNotification,
     isDeleting,
     handleUpdateStock,
     handleReplace,
+    handleTogglePin,
     handleToggleArchive,
     handleToggleNotification,
     statusState,
@@ -200,23 +203,27 @@ export function ItemMobileRow({
               <span className="text-xs">更换</span>
             </Button>
 
-            {/* 置顶按钮 (功能预留) */}
+            {/* 置顶按钮 */}
             <Button
               variant="outline"
               size="sm"
               className={cn(
                 "flex flex-col items-center gap-1 h-auto py-2",
-                // TODO: 接入 isPinned 状态
-                // isPinned
-                //   ? "border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white"
-                //   :
-                "text-muted-foreground hover:bg-amber-500 hover:text-white"
+                item.isPinned
+                  ? "border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white"
+                  : "text-muted-foreground hover:bg-amber-500 hover:text-white"
               )}
-              // TODO: 接入 handleTogglePin
-              disabled
+              onClick={handleTogglePin}
+              disabled={isPinning}
             >
-              <PinOff className="size-4" />
-              <span className="text-xs">置顶</span>
+              {isPinning ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : item.isPinned ? (
+                <Pin className="size-4" />
+              ) : (
+                <PinOff className="size-4" />
+              )}
+              <span className="text-xs">{item.isPinned ? "取消" : "置顶"}</span>
             </Button>
 
             {/* 通知按钮 */}

@@ -110,6 +110,7 @@ model Item {
   // 2. 状态与库存
   stock            Int      @default(1) // 当前库存数量
   isArchived       Boolean  @default(false) // 归档（逻辑删除）
+  isPinned         Boolean  @default(false) // 置顶（主页显示）
   
   // 3. 生命周期关键指标
   // 上次更换/开始使用时间 (用于计算进度)

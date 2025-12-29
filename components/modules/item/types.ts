@@ -38,6 +38,19 @@ export interface ItemStatusState {
 }
 
 /**
+ * Category DTO 类型
+ *
+ * 用于 UI 组件的分类数据结构，避免直接依赖 @prisma/client
+ */
+export interface Category {
+  id: string
+  name: string
+  description?: string | null
+  createdAt?: Date
+  updatedAt?: Date
+}
+
+/**
  * Item 基础类型 (带关联数据)
  */
 export type ItemWithRelations = Prisma.ItemGetPayload<{
@@ -60,6 +73,7 @@ export type InventoryItem = Omit<ItemWithRelations, "price"> & {
 export interface UseItemReturn {
   // Loading 状态
   isReplacing: boolean
+  isPinning: boolean
   isArchiving: boolean
   isUpdatingNotification: boolean
   isDeleting: boolean
@@ -67,6 +81,7 @@ export interface UseItemReturn {
   // 操作函数
   handleUpdateStock: (delta: number) => Promise<{ error?: string }>
   handleReplace: () => Promise<void>
+  handleTogglePin: () => Promise<void>
   handleToggleArchive: () => Promise<void>
   handleToggleNotification: (enabled: boolean) => Promise<void>
   handleDelete: () => Promise<void>

@@ -46,11 +46,13 @@ export function ItemCard({ item, categories, className }: ItemCardProps) {
 
   const {
     isReplacing,
+    isPinning,
     isArchiving,
     isUpdatingNotification,
     isDeleting,
     handleUpdateStock,
     handleReplace,
+    handleTogglePin,
     handleToggleArchive,
     handleToggleNotification,
     daysRemaining,
@@ -65,15 +67,18 @@ export function ItemCard({ item, categories, className }: ItemCardProps) {
           variant="dropdown"
           size="md"
           isArchived={item.isArchived}
+          isPinned={item.isPinned}
           isNotificationEnabled={(item.notifyAdvanceDays ?? 0) > 0}
           notifyAdvanceDays={item.notifyAdvanceDays}
           isReplacing={isReplacing}
+          isPinning={isPinning}
           isArchiving={isArchiving}
           isUpdatingNotification={isUpdatingNotification}
           isDeleting={isDeleting}
           statusState={statusState}
           stock={item.stock ?? 0}
           onReplace={handleReplace}
+          onTogglePin={handleTogglePin}
           onToggleArchive={handleToggleArchive}
           onToggleNotification={handleToggleNotification}
           onDelete={() => requestDelete({ id: item.id, name: item.name })}
