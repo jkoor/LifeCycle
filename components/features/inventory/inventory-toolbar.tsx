@@ -2,16 +2,7 @@
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import {
-  Search,
-  LayoutGrid,
-  List as ListIcon,
-  X,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Check,
-} from "lucide-react"
+import { Search, X, ArrowUp, ArrowDown, Check } from "lucide-react"
 import { useQueryStates } from "nuqs"
 import {
   inventoryParams,
@@ -26,12 +17,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 
 export function InventoryToolbar() {
   const [params, setParams] = useQueryStates(inventoryParams, {
@@ -59,100 +44,77 @@ export function InventoryToolbar() {
   }
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between py-4">
-      <div className="flex flex-1 items-center gap-2">
-        <div className="relative w-full md:max-w-xs">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="搜索物品..."
-            className="pl-9 w-full"
-            value={params.q}
-            onChange={(e) => setParams({ q: e.target.value || "" })}
-          />
-          {params.q && (
-            <button
-              onClick={clearSearch}
-              className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+    <div className="flex items-center gap-2 py-4">
+      {/* Search input - 限制桌面端最大宽度 */}
+      <div className="relative flex-1 md:max-w-xs">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="搜索物品..."
+          className="pl-9 w-full"
+          value={params.q}
+          onChange={(e) => setParams({ q: e.target.value || "" })}
+        />
+        {params.q && (
+          <button
+            onClick={clearSearch}
+            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
-      <div className="flex items-center gap-2">
-        {/* Sort dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9 gap-2">
-              {/* <ArrowUpDown className="h-4 w-4" /> */}
-              {/* <span className="hidden sm:inline"></span> */}
-              <span>{sortByLabels[params.sortBy]}</span>
-              {params.sortDir === "asc" ? (
-                <ArrowUp className="h-3 w-3" />
-              ) : (
-                <ArrowDown className="h-3 w-3" />
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
-            {sortByOptions.map((option) => (
-              <DropdownMenuItem
-                key={option}
-                onClick={() => handleSortByChange(option)}
-                className="flex items-center justify-between"
-              >
-                <span>{sortByLabels[option]}</span>
-                {params.sortBy === option && (
-                  <div className="flex items-center gap-1">
-                    {params.sortDir === "asc" ? (
-                      <ArrowUp className="h-3 w-3" />
-                    ) : (
-                      <ArrowDown className="h-3 w-3" />
-                    )}
-                    <Check className="h-4 w-4" />
-                  </div>
-                )}
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={toggleSortDir}
-              className="text-muted-foreground"
-            >
-              {params.sortDir === "asc" ? "切换为降序" : "切换为升序"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
 
-        {/* View toggle - single button */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() =>
-                  setParams({ view: params.view === "grid" ? "table" : "grid" })
-                }
-                aria-label={
-                  params.view === "grid" ? "切换到列表视图" : "切换到网格视图"
-                }
-              >
-                {params.view === "grid" ? (
-                  <LayoutGrid className="h-4 w-4" />
-                ) : (
-                  <ListIcon className="h-4 w-4" />
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {params.view === "grid" ? "切换到列表视图" : "切换到网格视图"}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
+      {/* Sort dropdown - 使用 onSelect + preventDefault 保持菜单开启 */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="h-9 gap-1 shrink-0">
+            <span className="hidden sm:inline">
+              {sortByLabels[params.sortBy]}
+            </span>
+            <span className="sm:hidden">排序</span>
+            {params.sortDir === "asc" ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : (
+              <ArrowDown className="h-3 w-3" />
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          {sortByOptions.map((option) => (
+            <DropdownMenuItem
+              key={option}
+              onSelect={(e) => {
+                e.preventDefault() // 阻止菜单关闭
+                handleSortByChange(option)
+              }}
+              className="flex items-center justify-between cursor-pointer"
+            >
+              <span>{sortByLabels[option]}</span>
+              {params.sortBy === option && (
+                <div className="flex items-center gap-1">
+                  {params.sortDir === "asc" ? (
+                    <ArrowUp className="h-3 w-3" />
+                  ) : (
+                    <ArrowDown className="h-3 w-3" />
+                  )}
+                  <Check className="h-4 w-4" />
+                </div>
+              )}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onSelect={(e) => {
+              e.preventDefault()
+              toggleSortDir()
+            }}
+            className="text-muted-foreground cursor-pointer"
+          >
+            {params.sortDir === "asc" ? "切换为降序" : "切换为升序"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   )
 }

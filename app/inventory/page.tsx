@@ -4,7 +4,7 @@ import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { InventoryHeader } from "@/components/features/inventory/inventory-header"
 import { InventoryToolbar } from "@/components/features/inventory/inventory-toolbar"
-import { InventoryList } from "@/components/features/inventory/inventory-list"
+import { InventoryContainer } from "@/components/features/inventory/inventory-container"
 import { searchParamsCache } from "./search-params"
 import { SearchParams } from "nuqs/server"
 
@@ -13,9 +13,7 @@ type PageProps = {
 }
 
 export default async function InventoryPage({ searchParams }: PageProps) {
-  const { q, view, sortBy, sortDir } = await searchParamsCache.parse(
-    searchParams
-  )
+  const { q, sortBy, sortDir } = await searchParamsCache.parse(searchParams)
   const session = await auth()
 
   if (!session?.user?.id) {
@@ -64,16 +62,15 @@ export default async function InventoryPage({ searchParams }: PageProps) {
         <InventoryToolbar />
       </Suspense>
 
-      {/* Data View: Table / Grid */}
+      {/* Data View: Table (Desktop) / Grid (Mobile) */}
       <Suspense
-        key={JSON.stringify({ q, sortBy, sortDir, view })} // Force re-render on params change
+        key={JSON.stringify({ q, sortBy, sortDir })}
         fallback={
           <div className="h-64 w-full bg-muted/20 animate-pulse rounded-lg" />
         }
       >
-        <InventoryList
+        <InventoryContainer
           items={items}
-          view={view}
           searchQuery={q}
           categories={categories}
           sortBy={sortBy}

@@ -9,7 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { Minus, Plus } from "lucide-react"
+import { Lock, Minus, Plus } from "lucide-react"
 import { toast } from "sonner"
 
 interface ItemStockControlProps {
@@ -17,6 +17,10 @@ interface ItemStockControlProps {
   stock: number
   /** 库存更新回调，返回 { error?: string } 用于回滚判断 */
   onUpdateStock: (delta: number) => Promise<{ error?: string } | void> | void
+  /** 是否为固定库存模式 */
+  isStockFixed?: boolean
+  /** 规格信息（如 "500 ml"），可选显示 */
+  spec?: string
   /** 尺寸: sm(h-6), md(h-7), lg(h-8) */
   size?: "sm" | "md" | "lg"
   /** 额外的 className */
@@ -36,16 +40,19 @@ const sizeClasses = {
  * - 点击立即更新数字（Optimistic UI）
  * - 后台静默发送请求
  * - 失败时自动回滚 + 显示错误通知
+ * - 固定库存模式：显示锁定图标，禁用加减按钮
  *
  * 视觉表现：
- * - 库存为 0 时：红色显示，减少按钮禁用
- * - 库存 <= 2 时：黄色警告
+ * - 固定库存：显示锁定图标
+ * - 库存为 0 时：统一颜色
  * - 正常库存：默认颜色
  *
  * @example
  * ```tsx
  * <ItemStockControl
  *   stock={item.stock}
+ *   isStockFixed={item.isStockFixed}
+ *   spec={`${item.quantity} ${item.unit}`}
  *   onUpdateStock={async (delta) => {
  *     const res = await updateStock(item.id, delta)
  *     return res // { error?: string }
@@ -56,6 +63,8 @@ const sizeClasses = {
 export function ItemStockControl({
   stock,
   onUpdateStock,
+  isStockFixed = false,
+  spec,
   size = "md",
   className,
 }: ItemStockControlProps) {
@@ -97,12 +106,31 @@ export function ItemStockControl({
     })
   }
 
-  const stockColor =
-    optimisticStock === 0
-      ? "text-red-500"
-      : optimisticStock <= 2
-      ? "text-amber-500"
-      : "text-foreground"
+  // 固定库存模式：显示锁定状态
+  if (isStockFixed) {
+    return (
+      <TooltipProvider>
+        <div
+          className={cn("flex items-center justify-center gap-1", className)}
+        >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50">
+                <Lock className="size-3.5 text-primary" />
+                <span className="text-sm font-medium">{stock}</span>
+                {spec && (
+                  <span className="text-xs text-muted-foreground ml-1">
+                    ({spec})
+                  </span>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>固定库存模式（库存不随使用减少）</TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
+    )
+  }
 
   return (
     <TooltipProvider>
@@ -122,14 +150,18 @@ export function ItemStockControl({
           <TooltipContent>减少库存</TooltipContent>
         </Tooltip>
 
-        <span
-          className={cn(
-            "min-w-[24px] text-center text-sm font-medium transition-colors",
-            stockColor
+        <div className="flex items-center gap-0.5">
+          <span
+            className={cn(
+              "min-w-[24px] text-center text-sm font-medium transition-colors text-foreground"
+            )}
+          >
+            {optimisticStock}
+          </span>
+          {spec && (
+            <span className="text-xs text-muted-foreground">{spec}</span>
           )}
-        >
-          {optimisticStock}
-        </span>
+        </div>
 
         <Tooltip>
           <TooltipTrigger asChild>

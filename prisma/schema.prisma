@@ -118,7 +118,18 @@ model Item {
   // 生命周期 (天数) - 软性周期，如“牙刷建议90天更换”
   lifespanDays     Int?     
   
-  // 硬性过期时间 - 绝对日期，如“牛奶 2025-10-01 过期”
+  // [NEW] 保质期天数 (硬性限制) - 相对时间，如"保质期365天"
+  shelfLifeDays    Int?
+  
+  // [NEW] 单位与规格
+  unit             String    @default("个") // 计量单位，如 "个", "ml", "g"
+  quantity         Float     @default(1)    // 单件规格，如 500 (ml)
+  
+  // [NEW] 固定库存模式 (订阅制专用)
+  isStockFixed     Boolean   @default(false)
+  
+  // @deprecated: 硬性过期时间 - 绝对日期，如"牛奶 2025-10-01 过期"
+  // 请使用 shelfLifeDays 替代。保留此字段用于数据迁移兼容。
   expirationDate   DateTime? 
   
   // 提前通知天数 (默认 3 天)

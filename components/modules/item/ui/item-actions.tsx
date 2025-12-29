@@ -23,6 +23,8 @@ import {
   Loader2,
   MoreHorizontal,
   Pencil,
+  Pin,
+  PinOff,
   RefreshCw,
   Trash2,
 } from "lucide-react"
@@ -43,6 +45,8 @@ export interface ItemActionsProps {
   // 状态
   /** 是否已归档 */
   isArchived?: boolean
+  /** 是否已置顶 */
+  isPinned?: boolean
   /** 通知是否开启 (notifyAdvanceDays > 0) */
   isNotificationEnabled?: boolean
   /** 通知提前天数 */
@@ -54,6 +58,7 @@ export interface ItemActionsProps {
 
   // Loading 状态
   isReplacing?: boolean
+  isPinning?: boolean
   isArchiving?: boolean
   isUpdatingNotification?: boolean
   isDeleting?: boolean
@@ -61,6 +66,7 @@ export interface ItemActionsProps {
   // 事件回调
   onEdit?: () => void
   onReplace?: () => void
+  onTogglePin?: () => void
   onToggleArchive?: () => void
   onToggleNotification?: (enabled: boolean) => void
   onDelete?: () => void
@@ -81,15 +87,18 @@ function IconButtons({
   size = "md",
   className,
   isArchived,
+  isPinned,
   isNotificationEnabled,
   notifyAdvanceDays,
   statusState,
   stock = 0,
   isReplacing,
+  isPinning,
   isArchiving,
   isUpdatingNotification,
   isDeleting,
   onReplace,
+  onTogglePin,
   onToggleArchive,
   onToggleNotification,
   onDelete,
@@ -138,6 +147,37 @@ function IconButtons({
               </Button>
             </TooltipTrigger>
             <TooltipContent>更换 (库存-1, 重置日期)</TooltipContent>
+          </Tooltip>
+        )}
+
+        {/* 置顶按钮 */}
+        {onTogglePin && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  buttonSize,
+                  "transition-colors",
+                  isPinned
+                    ? "text-amber-500 hover:bg-amber-500 hover:text-white"
+                    : "text-muted-foreground hover:bg-amber-500 hover:text-white",
+                  isPinning && "opacity-50"
+                )}
+                onClick={onTogglePin}
+                disabled={isPinning}
+              >
+                {isPinning ? (
+                  <Loader2 className={cn(iconSize, "animate-spin")} />
+                ) : isPinned ? (
+                  <Pin className={iconSize} />
+                ) : (
+                  <PinOff className={iconSize} />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{isPinned ? "取消置顶" : "置顶"}</TooltipContent>
           </Tooltip>
         )}
 
@@ -239,21 +279,28 @@ function DropdownButtons({
   size = "md",
   className,
   isArchived,
+  isPinned,
   isNotificationEnabled,
   isReplacing,
+  isPinning,
   isArchiving,
   isUpdatingNotification,
   isDeleting,
   stock = 0,
   onEdit,
   onReplace,
+  onTogglePin,
   onToggleArchive,
   onToggleNotification,
   onDelete,
 }: ItemActionsProps) {
   const { button: buttonSize, icon: iconSize } = sizeClasses[size ?? "md"]
   const isAnyLoading =
-    isReplacing || isArchiving || isUpdatingNotification || isDeleting
+    isReplacing ||
+    isPinning ||
+    isArchiving ||
+    isUpdatingNotification ||
+    isDeleting
 
   return (
     <DropdownMenu>
@@ -282,6 +329,21 @@ function DropdownButtons({
           <DropdownMenuItem onClick={onReplace} disabled={stock < 1}>
             <RefreshCw className="mr-2 h-4 w-4" />
             更换
+          </DropdownMenuItem>
+        )}
+        {onTogglePin && (
+          <DropdownMenuItem onClick={onTogglePin}>
+            {isPinned ? (
+              <>
+                <PinOff className="mr-2 h-4 w-4" />
+                取消置顶
+              </>
+            ) : (
+              <>
+                <Pin className="mr-2 h-4 w-4" />
+                置顶
+              </>
+            )}
           </DropdownMenuItem>
         )}
         {onToggleNotification && (

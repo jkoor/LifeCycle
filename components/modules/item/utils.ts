@@ -19,17 +19,38 @@ export const THRESHOLD_LOW_STOCK = 2
 /**
  * 计算物品的剩余天数
  *
- * 优先使用 expirationDate，否则使用 lifespanDays + lastOpenedAt 计算
+ * 新版计算逻辑 (v2):
+ * 1. Use-by Date (开封失效点) = lastOpenedAt + lifespanDays
+ * 2. Best-by Date (保质失效点) = lastOpenedAt + shelfLifeDays
+ * 3. Legacy: expirationDate (绝对日期，兼容旧数据)
+ * 4. 实际剩余天数 = Min(所有 deadline) - Today
+ *
+ * 支持负数返回值，表示已过期的天数
  */
 export function getRemainingDays(item: InventoryItem): number | null {
-  if (item.expirationDate) {
-    return differenceInDays(new Date(item.expirationDate), new Date())
-  }
+  const now = new Date()
+  const deadlines: Date[] = []
+
+  // 软性使用寿命: lastOpenedAt + lifespanDays
   if (item.lifespanDays && item.lastOpenedAt) {
-    const expiresAt = addDays(new Date(item.lastOpenedAt), item.lifespanDays)
-    return differenceInDays(expiresAt, new Date())
+    deadlines.push(addDays(new Date(item.lastOpenedAt), item.lifespanDays))
   }
-  return null
+
+  // 硬性保质期: lastOpenedAt + shelfLifeDays
+  if (item.shelfLifeDays && item.lastOpenedAt) {
+    deadlines.push(addDays(new Date(item.lastOpenedAt), item.shelfLifeDays))
+  }
+
+  // 兼容旧数据：绝对过期日期 (deprecated)
+  if (item.expirationDate) {
+    deadlines.push(new Date(item.expirationDate))
+  }
+
+  if (deadlines.length === 0) return null
+
+  // 取最早的 deadline
+  const earliest = deadlines.reduce((a, b) => (a < b ? a : b))
+  return differenceInDays(earliest, now)
 }
 
 /**

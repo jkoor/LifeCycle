@@ -22,6 +22,18 @@ export const itemFormSchema = z.object({
     .min(1, "Lifespan must be at least 1 day")
     .optional()
     .or(z.literal(0)),
+
+  // [NEW] 保质期天数 (硬性限制)
+  shelfLifeDays: z.coerce.number().int().min(1, "保质期至少1天").optional(),
+
+  // [NEW] 单位与规格
+  unit: z.string().default("个"),
+  quantity: z.coerce.number().min(0.01, "规格数量必须大于0").default(1),
+
+  // [NEW] 固定库存模式
+  isStockFixed: z.boolean().default(false),
+
+  // @deprecated: 保留用于数据迁移兼容
   expirationDate: z.date().optional(),
 
   // Notification

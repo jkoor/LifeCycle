@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { AddItemModal } from "@/components/features/inventory/add-item-modal"
+import { AddItemModal } from "@/components/modules/item/ui"
 import { Category } from "@prisma/client"
 
 interface InventoryHeaderProps {

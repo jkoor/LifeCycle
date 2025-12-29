@@ -29,7 +29,6 @@ export const sortByLabels: Record<SortByOption, string> = {
 
 export const inventoryParams = {
   q: parseAsString.withDefault(""),
-  view: parseAsString, // Default to null for responsive behavior
   // 排序相关参数
   sortBy: parseAsStringLiteral(sortByOptions).withDefault("remainingDays"),
   sortDir: parseAsStringLiteral(sortDirOptions).withDefault("asc"),

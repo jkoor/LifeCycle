@@ -2,54 +2,39 @@
 
 import { useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { cn } from "@/lib/utils"
 import { Category } from "@prisma/client"
+import { InventoryItem, getRemainingDays } from "@/components/modules/item"
+import { DeleteDialogProvider } from "@/components/common/delete-dialog-provider"
+import { ItemMobileRow } from "./inventory-mobile-row"
 import { SortByOption, SortDirOption } from "@/app/inventory/search-params"
-
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
 
-import {
-  InventoryItem,
-  getRemainingDays,
-  ItemRow,
-} from "@/components/modules/item"
-import { DeleteDialogProvider } from "@/components/common/delete-dialog-provider"
-
-interface InventoryListViewProps {
+interface InventoryMobileGridProps {
   items: InventoryItem[]
   categories: Category[]
   sortBy?: SortByOption
   sortDir?: SortDirOption
-  className?: string
 }
 
 /**
- * 桌面端物品列表视图
+ * 移动端物品视图（Drawer 抽屉模式 + Accordion 分组）
  *
- * 使用 InventoryTableRow 组件渲染每行，
- * 逻辑已抽离到 useInventoryItem Hook。
- * 删除确认由 DeleteDialogProvider 统一处理。
+ * 使用 ItemMobileRow 组件：点击展开 Drawer 详情
+ * 支持按分类分组，使用 Accordion 展开/折叠
+ * 删除确认由 DeleteDialogProvider 统一处理
  */
-export function InventoryListView({
+export function InventoryMobileGrid({
   items,
   categories,
   sortBy = "remainingDays",
   sortDir = "asc",
-  className,
-}: InventoryListViewProps) {
+}: InventoryMobileGridProps) {
   const router = useRouter()
 
   // 排序函数
@@ -117,42 +102,7 @@ export function InventoryListView({
 
   return (
     <DeleteDialogProvider onDeleteSuccess={() => router.refresh()}>
-      <div
-        className={cn("hidden rounded-lg border bg-card md:block", className)}
-      >
-        <Table className="table-fixed w-full">
-          <colgroup>
-            <col className="w-[300px]" />
-            <col className="w-[90px]" />
-            <col className="w-[20px]" />
-            <col className="w-[150px]" />
-            <col className="w-[110px]" />
-            <col className="w-[170px]" />
-            <col className="w-[130px]" />
-          </colgroup>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b">
-              <TableHead className="h-12 pl-4 pr-2 font-medium">物品</TableHead>
-              <TableHead className="h-12 px-2 font-medium text-right">
-                价格
-              </TableHead>
-              <TableHead></TableHead>
-              <TableHead className="h-12 px-2 font-medium text-center">
-                库存
-              </TableHead>
-              <TableHead className="h-12 px-2 font-medium text-center">
-                上次更换
-              </TableHead>
-              <TableHead className="h-12 px-2 font-medium text-center">
-                剩余天数
-              </TableHead>
-              <TableHead className="h-12 pl-2 pr-4 font-medium text-center">
-                操作
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-        </Table>
-
+      <div className="block md:hidden rounded-lg border bg-card">
         <Accordion
           type="multiple"
           defaultValue={allCategoryNames}
@@ -172,27 +122,16 @@ export function InventoryListView({
                   </Badge>
                 </div>
               </AccordionTrigger>
-              <AccordionContent className={cn("p-0 -mx-4")}>
-                <Table className="table-fixed w-full">
-                  <colgroup>
-                    <col className="w-[300px]" />
-                    <col className="w-[90px]" />
-                    <col className="w-[20px]" />
-                    <col className="w-[150px]" />
-                    <col className="w-[110px]" />
-                    <col className="w-[170px]" />
-                    <col className="w-[130px]" />
-                  </colgroup>
-                  <TableBody>
-                    {categoryItems.map((item) => (
-                      <ItemRow
-                        key={item.id}
-                        item={item}
-                        categories={categories}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
+              <AccordionContent className="p-0">
+                <div className="divide-y divide-border/50">
+                  {categoryItems.map((item) => (
+                    <ItemMobileRow
+                      key={item.id}
+                      item={item}
+                      categories={categories}
+                    />
+                  ))}
+                </div>
               </AccordionContent>
             </AccordionItem>
           ))}

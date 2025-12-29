@@ -24,9 +24,7 @@ export {
   ItemTags,
   ItemStockControl,
   ItemStatus,
+  ItemRemainingDays,
   ItemActions,
-  ItemCard,
-  ItemRow,
-  ItemMobileRow,
 } from "./ui"
 export type { ItemActionsProps } from "./ui"

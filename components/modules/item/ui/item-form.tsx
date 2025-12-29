@@ -4,13 +4,14 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
-import { zhCN } from "date-fns/locale"
 import {
   CalendarIcon,
   Check,
   ChevronsUpDown,
   Loader2,
+  Lock,
   Plus,
+  Unlock,
   X,
 } from "lucide-react"
 
@@ -75,6 +76,9 @@ export function ItemForm({
     defaultValues: {
       name: "",
       stock: 1,
+      unit: "个",
+      quantity: 1,
+      isStockFixed: false,
       notifyAdvanceDays: 3,
       notifyEnabled: true,
       tags: [],
@@ -130,14 +134,14 @@ export function ItemForm({
         <div className="space-y-6">
           {/* 1. 基础信息区域 */}
           <div className="flex flex-col sm:flex-row gap-6">
-            {/* 左侧：图片预览与上传 */}
-            <div className="sm:w-[120px] space-y-2 flex-shrink-0">
+            {/* 左侧：图片预览与上传 - 固定正方形尺寸 */}
+            <div className="w-[120px] space-y-2 flex-shrink-0 mx-auto sm:mx-0">
               <FormField
                 control={form.control}
                 name="image"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="relative h-[120px] w-full sm:w-[120px] rounded-xl border-2 border-dashed bg-muted/30 flex items-center justify-center overflow-hidden hover:bg-muted/50 transition-colors group">
+                    <div className="relative aspect-square w-[120px] rounded-xl border-2 border-dashed bg-muted/30 flex items-center justify-center overflow-hidden hover:bg-muted/50 transition-colors group">
                       {field.value ? (
                         <>
                           <Image
@@ -164,7 +168,7 @@ export function ItemForm({
                     <FormControl>
                       <Input
                         placeholder="图片链接..."
-                        className="h-8 text-xs mt-2"
+                        className="h-8 text-xs mt-2 w-[120px]"
                         {...field}
                         value={field.value || ""}
                       />
@@ -331,10 +335,100 @@ export function ItemForm({
                 name="stock"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>库存</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      库存
+                      <FormField
+                        control={form.control}
+                        name="isStockFixed"
+                        render={({ field: lockField }) => (
+                          <button
+                            type="button"
+                            onClick={() => lockField.onChange(!lockField.value)}
+                            className={cn(
+                              "p-1 rounded-md transition-colors",
+                              lockField.value
+                                ? "text-primary bg-primary/10"
+                                : "text-muted-foreground hover:text-foreground"
+                            )}
+                            title={
+                              lockField.value
+                                ? "固定库存已开启"
+                                : "点击锁定库存"
+                            }
+                          >
+                            {lockField.value ? (
+                              <Lock className="h-3.5 w-3.5" />
+                            ) : (
+                              <Unlock className="h-3.5 w-3.5" />
+                            )}
+                          </button>
+                        )}
+                      />
+                    </FormLabel>
                     <FormControl>
-                      <Input type="number" step="1" {...field} />
+                      <Input
+                        type="number"
+                        step="1"
+                        {...field}
+                        disabled={form.watch("isStockFixed")}
+                        className={cn(
+                          form.watch("isStockFixed") &&
+                            "bg-muted cursor-not-allowed"
+                        )}
+                      />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* 规格输入 (Quantity + Unit) */}
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>规格数量</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="如 500"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unit"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>单位</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择单位" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="个">个</SelectItem>
+                        <SelectItem value="ml">ml (毫升)</SelectItem>
+                        <SelectItem value="L">L (升)</SelectItem>
+                        <SelectItem value="g">g (克)</SelectItem>
+                        <SelectItem value="kg">kg (千克)</SelectItem>
+                        <SelectItem value="片">片</SelectItem>
+                        <SelectItem value="袋">袋</SelectItem>
+                        <SelectItem value="盒">盒</SelectItem>
+                        <SelectItem value="瓶">瓶</SelectItem>
+                        <SelectItem value="支">支</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -400,42 +494,22 @@ export function ItemForm({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
-                  name="expirationDate"
+                  name="shelfLifeDays"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                       <FormLabel className="text-xs text-muted-foreground">
-                        硬性过期日期
+                        保质期(天)
                       </FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              size="sm"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal text-sm",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "yyyy-MM-dd")
-                              ) : (
-                                <span>选择日期</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-3 w-3 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date < new Date("1900-01-01")}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          className="h-9 text-sm"
+                          placeholder="如 365"
+                          {...field}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />

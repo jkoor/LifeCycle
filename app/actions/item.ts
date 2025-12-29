@@ -188,14 +188,15 @@ export async function replaceItem(id: string) {
   try {
     const item = await prisma.item.findUnique({
       where: { id, userId: session.user.id },
-      select: { stock: true, lastOpenedAt: true },
+      select: { stock: true, lastOpenedAt: true, isStockFixed: true },
     })
 
     if (!item) {
       return { error: "Item not found" }
     }
 
-    if (item.stock < 1) {
+    // 如果不是固定库存模式，检查库存是否充足
+    if (!item.isStockFixed && item.stock < 1) {
       return { error: "库存不足，无法更换" }
     }
 
@@ -205,7 +206,8 @@ export async function replaceItem(id: string) {
     await prisma.item.update({
       where: { id, userId: session.user.id },
       data: {
-        stock: item.stock - 1,
+        // 固定库存模式下不扣减库存
+        stock: item.isStockFixed ? item.stock : item.stock - 1,
         lastOpenedAt: new Date(),
       },
     })

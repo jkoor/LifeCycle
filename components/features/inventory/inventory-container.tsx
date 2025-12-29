@@ -1,8 +1,8 @@
 "use client"
 
 import { InventoryItem } from "@/types/inventory"
-import { InventoryListView } from "@/components/features/inventory/inventory-list-view"
-import { InventoryGridView } from "@/components/features/inventory/inventory-grid-view"
+import { InventoryDesktopTable } from "./inventory-desktop-table"
+import { InventoryMobileGrid } from "./inventory-mobile-grid"
 import { Category } from "@prisma/client"
 import {
   Empty,
@@ -14,26 +14,31 @@ import {
 } from "@/components/ui/empty"
 import { Button } from "@/components/ui/button"
 import { Package, Plus } from "lucide-react"
-import { AddItemModal } from "./add-item-modal"
+import { AddItemModal } from "@/components/modules/item/ui"
 import { SortByOption, SortDirOption } from "@/app/inventory/search-params"
 
-interface InventoryListProps {
+interface InventoryContainerProps {
   items: InventoryItem[]
-  view?: string | null
   searchQuery?: string | null
   categories: Category[]
   sortBy?: SortByOption
   sortDir?: SortDirOption
 }
 
-export function InventoryList({
+/**
+ * 库存视图容器
+ *
+ * 负责：
+ * - 空状态处理
+ * - 响应式视图切换（桌面端表格 / 移动端列表）
+ */
+export function InventoryContainer({
   items,
-  view,
   searchQuery,
   categories,
   sortBy = "remainingDays",
   sortDir = "asc",
-}: InventoryListProps) {
+}: InventoryContainerProps) {
   if (items.length === 0) {
     const isSearching = searchQuery && searchQuery.length > 0
 
@@ -68,44 +73,20 @@ export function InventoryList({
 
   return (
     <div className="space-y-4">
-      {/* Desktop View / Table View */}
-      {/* 
-        Show ListView if:
-        1. view is 'table' (explicit) -> force show on all screens
-        2. view is null (responsive default) -> handled by built-in classes (hidden on mobile, show on desktop)
-        3. view is 'grid' (explicit) -> force hide on all screens
-      */}
-      <InventoryListView
+      {/* 桌面端表格视图 - 内置 hidden md:block */}
+      <InventoryDesktopTable
         items={items}
         categories={categories}
         sortBy={sortBy}
         sortDir={sortDir}
-        className={
-          view === "table"
-            ? "block" // force table: show on all screens
-            : view === "grid"
-            ? "hidden md:hidden" // force grid: completely hide list view
-            : undefined // default: use built-in responsive classes
-        }
       />
 
-      {/* Mobile View / Grid View */}
-      {/*
-        Show GridView if:
-        1. view is 'grid' (explicit) -> force show on all screens
-        2. view is null (responsive default) -> handled by built-in classes (show on mobile, hidden on desktop)
-        3. view is 'table' (explicit) -> force hide on all screens
-      */}
-      <InventoryGridView
+      {/* 移动端列表视图 - 内置 block md:hidden */}
+      <InventoryMobileGrid
         items={items}
         categories={categories}
-        className={
-          view === "grid"
-            ? "block md:block" // force grid: show on all screens
-            : view === "table"
-            ? "hidden md:hidden" // force table: completely hide grid view
-            : undefined // default: use built-in responsive classes
-        }
+        sortBy={sortBy}
+        sortDir={sortDir}
       />
     </div>
   )
