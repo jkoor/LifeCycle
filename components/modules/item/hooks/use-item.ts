@@ -72,7 +72,8 @@ export function useItem(item: InventoryItem): UseItemReturn {
    * 一键更换物品
    * - 库存 -1
    * - 重置上次更换日期
-   * - 支持撤销
+   * - 创建快照日志
+   * - 支持撤销（同时删除快照日志）
    */
   const handleReplace = useCallback(async () => {
     setIsReplacing(true)
@@ -90,7 +91,8 @@ export function useItem(item: InventoryItem): UseItemReturn {
                 await undoReplaceItem(
                   item.id,
                   res.previousStock,
-                  res.previousDate || null
+                  res.previousDate || null,
+                  res.usageLogId // <--- 传递日志 ID 以便撤销时删除
                 )
                 router.refresh()
               }

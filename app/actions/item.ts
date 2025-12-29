@@ -186,9 +186,21 @@ export async function replaceItem(id: string) {
   }
 
   try {
+    // 1. 获取当前物品完整状态（用于快照）
     const item = await prisma.item.findUnique({
       where: { id, userId: session.user.id },
-      select: { stock: true, lastOpenedAt: true, isStockFixed: true },
+      select: {
+        stock: true,
+        lastOpenedAt: true,
+        isStockFixed: true,
+        // 快照所需字段
+        name: true,
+        brand: true,
+        price: true,
+        note: true,
+        unit: true,
+        quantity: true,
+      },
     })
 
     if (!item) {
@@ -202,21 +214,41 @@ export async function replaceItem(id: string) {
 
     const previousStock = item.stock
     const previousDate = item.lastOpenedAt
+    const replacedAt = new Date()
 
-    await prisma.item.update({
-      where: { id, userId: session.user.id },
-      data: {
-        // 固定库存模式下不扣减库存
-        stock: item.isStockFixed ? item.stock : item.stock - 1,
-        lastOpenedAt: new Date(),
-      },
-    })
+    // 2. 使用事务同时更新物品和创建快照日志
+    const [updatedItem, newLog] = await prisma.$transaction([
+      // 更新物品状态
+      prisma.item.update({
+        where: { id, userId: session.user.id },
+        data: {
+          // 固定库存模式下不扣减库存
+          stock: item.isStockFixed ? item.stock : item.stock - 1,
+          lastOpenedAt: replacedAt,
+        },
+      }),
+      // 创建快照日志
+      prisma.usageLog.create({
+        data: {
+          userId: session.user.id,
+          itemId: id,
+          itemName: item.name,
+          itemBrand: item.brand,
+          itemPrice: item.price,
+          itemNote: item.note,
+          itemUnit: item.unit,
+          itemQuantity: item.quantity,
+          replacedAt: replacedAt,
+        },
+      }),
+    ])
 
     revalidatePath("/inventory")
     return {
       success: true,
       previousStock,
       previousDate: previousDate ? previousDate.toISOString() : null,
+      usageLogId: newLog.id, // <--- 返回日志 ID 以支持撤销
     }
   } catch (error) {
     console.error("Failed to replace item:", error)
@@ -224,11 +256,12 @@ export async function replaceItem(id: string) {
   }
 }
 
-// For Undo Replace
+// For Undo Replace - 撤销更换操作
 export async function undoReplaceItem(
   id: string,
   previousStock: number,
-  previousDate: string | null
+  previousDate: string | null,
+  usageLogId?: string // <--- 新参数：快照日志 ID
 ) {
   const session = await auth()
   if (!session?.user?.id) {
@@ -236,16 +269,32 @@ export async function undoReplaceItem(
   }
 
   try {
-    await prisma.item.update({
-      where: { id, userId: session.user.id },
-      data: {
-        stock: previousStock,
-        lastOpenedAt: previousDate ? new Date(previousDate) : null,
-      },
-    })
+    // 使用事务同时恢复物品状态和删除日志
+    const operations = [
+      // 恢复物品状态
+      prisma.item.update({
+        where: { id, userId: session.user.id },
+        data: {
+          stock: previousStock,
+          lastOpenedAt: previousDate ? new Date(previousDate) : null,
+        },
+      }),
+    ]
+
+    // 如果提供了日志 ID，则删除对应的快照记录
+    if (usageLogId) {
+      operations.push(
+        prisma.usageLog.delete({
+          where: { id: usageLogId },
+        }) as any // Type assertion needed for transaction array
+      )
+    }
+
+    await prisma.$transaction(operations)
     revalidatePath("/inventory")
     return { success: true }
   } catch (error) {
+    console.error("Failed to undo replace:", error)
     return { error: "Undo failed" }
   }
 }

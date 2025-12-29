@@ -359,6 +359,7 @@ export function ItemForm({
                         step="0.01"
                         placeholder="0.00"
                         {...field}
+                        value={field.value ?? ""}
                       />
                     </FormControl>
                     <FormMessage />
@@ -435,6 +436,7 @@ export function ItemForm({
                         step="0.01"
                         placeholder="如 500"
                         {...field}
+                        value={field.value ?? ""}
                       />
                     </FormControl>
                     <FormMessage />

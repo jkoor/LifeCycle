@@ -176,7 +176,18 @@ export async function undoReplaceItem(
 
 ## 5. Next Steps
 
-1.  Apply schema changes to `prisma/schema.prisma`.
-2.  Run `prisma migrate dev` or `prisma db push` to update the database.
-3.  Refactor `app/actions/item.ts` to implement the logic above.
-4.  Update the frontend `ItemCard` / `ItemRow` components to pass the `usageLogId` to the Undo handler.
+1.  ~~Apply schema changes to `prisma/schema.prisma`.~~ ✅ **Completed**
+2.  ~~Run `prisma migrate dev` or `prisma db push` to update the database.~~ ✅ **Completed**
+3.  ~~Refactor `app/actions/item.ts` to implement the logic above.~~ ✅ **Completed**
+4.  ~~Update the frontend `ItemCard` / `ItemRow` components to pass the `usageLogId` to the Undo handler.~~ ✅ **Completed**
+
+---
+
+## ✅ Implementation Completed (2025-12-29)
+
+All steps have been successfully implemented:
+
+- **Schema**: `UsageLog` model redesigned with snapshot fields (`itemName`, `itemBrand`, `itemPrice`, `itemNote`, `itemUnit`, `itemQuantity`, `replacedAt`)
+- **Server Action `replaceItem`**: Now uses `prisma.$transaction` to atomically update the item and create a snapshot log, returns `usageLogId`
+- **Server Action `undoReplaceItem`**: Updated to accept `usageLogId` parameter and delete the log on undo
+- **Frontend Hook `use-item.ts`**: `handleReplace` now passes `usageLogId` to the undo callback

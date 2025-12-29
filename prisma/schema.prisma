@@ -154,24 +154,34 @@ model Item {
 }
 
 // ==========================================
-// 📊 追踪模块 (Tracking)
+// 📊 追踪模块 (Tracking) - 更换历史快照
 // ==========================================
 
 model UsageLog {
-  id             String      @id @default(cuid())
-  
-  action         String      // 建议使用枚举逻辑，但 SQLite 建议存 String: "OPEN", "RESTOCK", "FINISH", "EDIT"
-  changeQuantity Int         // 库存变化量，例如 +5 或 -1
-  note           String?     // 操作备注，如“双十一囤货”
-  
-  itemId         String
-  item           Item        @relation(fields: [itemId], references: [id], onDelete: Cascade)
-  
-  userId         String
-  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String   @id @default(cuid())
 
-  createdAt      DateTime    @default(now()) // 操作发生时间
-  
+  // -- 快照数据 (更换时捕获的物品状态) --
+  // 显式复制这些字段以保留历史记录，
+  // 即使原始物品信息稍后被修改也不受影响。
+  itemName        String
+  itemBrand       String?
+  itemPrice       Decimal?
+  itemNote        String?
+  itemUnit        String   // 计量单位，如 "个", "ml"
+  itemQuantity    Float    // 单件规格，如 500 (ml)
+
+  // -- 操作元数据 --
+  replacedAt      DateTime @default(now()) // 更换发生时间
+
+  // -- 关联关系 --
+  itemId          String
+  item            Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // -- 索引 --
   @@index([itemId])
-  @@index([createdAt])
+  @@index([userId])
+  @@index([replacedAt])
 }

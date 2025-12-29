@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 
 /**
  * Auth.js v5 配置
- * 
+ *
  * 核心配置包括:
  * - Providers: 支持凭证登录 (邮箱/密码)
  * - Session: 使用 JWT 策略
@@ -35,14 +35,14 @@ export const authConfig: NextAuthConfig = {
     Credentials({
       name: "Credentials",
       credentials: {
-        email: { 
-          label: "Email", 
-          type: "email", 
-          placeholder: "your@email.com" 
+        email: {
+          label: "Email",
+          type: "email",
+          placeholder: "your@email.com",
         },
-        password: { 
-          label: "Password", 
-          type: "password" 
+        password: {
+          label: "Password",
+          type: "password",
         },
       },
       async authorize(credentials) {
@@ -97,6 +97,17 @@ export const authConfig: NextAuthConfig = {
     },
     async session({ session, token }) {
       if (token && session.user) {
+        // Verify user still exists in database
+        const userExists = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { id: true },
+        })
+
+        if (!userExists) {
+          // User was deleted, invalidate session
+          return { ...session, user: undefined } as typeof session
+        }
+
         session.user.id = token.id as string
         session.user.email = token.email as string
         session.user.name = token.name as string
