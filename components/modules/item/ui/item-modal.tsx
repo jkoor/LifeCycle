@@ -58,10 +58,17 @@ function transformItemToFormValues(
     image: item.image || undefined,
     note: item.note || undefined,
     stock: item.stock,
+    // 库存锁定状态
+    isStockFixed: item.isStockFixed ?? false,
+    // 规格信息
+    quantity: item.quantity ?? undefined,
+    unit: item.unit || "个",
     // 确保 price 是数字类型
     price: item.price ? Number(item.price) : undefined,
     lastOpenedAt: item.lastOpenedAt || undefined,
     lifespanDays: item.lifespanDays ?? 0,
+    // 保质期（天）
+    shelfLifeDays: item.shelfLifeDays ?? undefined,
     expirationDate: item.expirationDate || undefined,
     // notifyAdvanceDays 为 -1 时表示禁用通知
     notifyEnabled: item.notifyAdvanceDays !== -1,

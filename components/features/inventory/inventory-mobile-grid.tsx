@@ -20,6 +20,7 @@ interface InventoryMobileGridProps {
   categories: Category[]
   sortBy?: SortByOption
   sortDir?: SortDirOption
+  isArchived?: boolean
 }
 
 /**
@@ -34,6 +35,7 @@ export function InventoryMobileGrid({
   categories,
   sortBy = "remainingDays",
   sortDir = "asc",
+  isArchived = false,
 }: InventoryMobileGridProps) {
   const router = useRouter()
 
@@ -129,6 +131,7 @@ export function InventoryMobileGrid({
                       key={item.id}
                       item={item}
                       categories={categories}
+                      isArchived={isArchived}
                     />
                   ))}
                 </div>

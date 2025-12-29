@@ -23,6 +23,7 @@ interface InventoryContainerProps {
   categories: Category[]
   sortBy?: SortByOption
   sortDir?: SortDirOption
+  isArchived?: boolean
 }
 
 /**
@@ -38,6 +39,7 @@ export function InventoryContainer({
   categories,
   sortBy = "remainingDays",
   sortDir = "asc",
+  isArchived = false,
 }: InventoryContainerProps) {
   if (items.length === 0) {
     const isSearching = searchQuery && searchQuery.length > 0
@@ -49,15 +51,21 @@ export function InventoryContainer({
             <Package className="size-5" />
           </EmptyMedia>
           <EmptyTitle>
-            {isSearching ? "未找到匹配的物品" : "还没有物品"}
+            {isSearching
+              ? "未找到匹配的物品"
+              : isArchived
+              ? "没有归档的物品"
+              : "还没有物品"}
           </EmptyTitle>
           <EmptyDescription>
             {isSearching
               ? `没有找到与 "${searchQuery}" 匹配的物品，请尝试其他关键词。`
+              : isArchived
+              ? "归档列表为空，归档后的物品将显示在这里。"
               : "开始添加你的第一个物品，追踪它的生命周期。"}
           </EmptyDescription>
         </EmptyHeader>
-        {!isSearching && (
+        {!isSearching && !isArchived && (
           <EmptyContent>
             <AddItemModal categories={categories}>
               <Button>
@@ -79,6 +87,7 @@ export function InventoryContainer({
         categories={categories}
         sortBy={sortBy}
         sortDir={sortDir}
+        isArchived={isArchived}
       />
 
       {/* 移动端列表视图 - 内置 block md:hidden */}
@@ -87,6 +96,7 @@ export function InventoryContainer({
         categories={categories}
         sortBy={sortBy}
         sortDir={sortDir}
+        isArchived={isArchived}
       />
     </div>
   )

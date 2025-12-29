@@ -13,7 +13,9 @@ type PageProps = {
 }
 
 export default async function InventoryPage({ searchParams }: PageProps) {
-  const { q, sortBy, sortDir } = await searchParamsCache.parse(searchParams)
+  const { q, sortBy, sortDir, isArchived } = await searchParamsCache.parse(
+    searchParams
+  )
   const session = await auth()
 
   if (!session?.user?.id) {
@@ -23,6 +25,7 @@ export default async function InventoryPage({ searchParams }: PageProps) {
   const rawItems = await prisma.item.findMany({
     where: {
       userId: session.user.id,
+      isArchived: isArchived,
       name: {
         contains: q,
       },
@@ -64,7 +67,7 @@ export default async function InventoryPage({ searchParams }: PageProps) {
 
       {/* Data View: Table (Desktop) / Grid (Mobile) */}
       <Suspense
-        key={JSON.stringify({ q, sortBy, sortDir })}
+        key={JSON.stringify({ q, sortBy, sortDir, isArchived })}
         fallback={
           <div className="h-64 w-full bg-muted/20 animate-pulse rounded-lg" />
         }
@@ -75,6 +78,7 @@ export default async function InventoryPage({ searchParams }: PageProps) {
           categories={categories}
           sortBy={sortBy}
           sortDir={sortDir}
+          isArchived={isArchived}
         />
       </Suspense>
     </div>

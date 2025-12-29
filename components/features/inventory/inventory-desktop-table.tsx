@@ -30,6 +30,7 @@ interface InventoryDesktopTableProps {
   categories: Category[]
   sortBy?: SortByOption
   sortDir?: SortDirOption
+  isArchived?: boolean
 }
 
 /**
@@ -44,6 +45,7 @@ export function InventoryDesktopTable({
   categories,
   sortBy = "remainingDays",
   sortDir = "asc",
+  isArchived = false,
 }: InventoryDesktopTableProps) {
   const router = useRouter()
 
@@ -192,6 +194,7 @@ export function InventoryDesktopTable({
                         key={item.id}
                         item={item}
                         categories={categories}
+                        isArchived={isArchived}
                       />
                     ))}
                   </TableBody>

@@ -25,6 +25,8 @@ interface ItemStockControlProps {
   size?: "sm" | "md" | "lg"
   /** 额外的 className */
   className?: string
+  /** 是否禁用加减按钮（仅灰色禁用，不显示锁定图标） */
+  disabled?: boolean
 }
 
 const sizeClasses = {
@@ -67,6 +69,7 @@ export function ItemStockControl({
   spec,
   size = "md",
   className,
+  disabled = false,
 }: ItemStockControlProps) {
   const { button: buttonSize, icon: iconSize } = sizeClasses[size]
 
@@ -142,7 +145,7 @@ export function ItemStockControl({
               size="icon"
               className={cn(buttonSize, "hover:bg-primary hover:text-white")}
               onClick={() => handleClick(-1)}
-              disabled={isPending || optimisticStock <= 0}
+              disabled={disabled || isPending || optimisticStock <= 0}
             >
               <Minus className={iconSize} />
             </Button>
@@ -170,7 +173,7 @@ export function ItemStockControl({
               size="icon"
               className={cn(buttonSize, "hover:bg-primary hover:text-white")}
               onClick={() => handleClick(1)}
-              disabled={isPending}
+              disabled={disabled || isPending}
             >
               <Plus className={iconSize} />
             </Button>

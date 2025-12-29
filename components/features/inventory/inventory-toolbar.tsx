@@ -2,7 +2,15 @@
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, X, ArrowUp, ArrowDown, Check } from "lucide-react"
+import {
+  Search,
+  X,
+  ArrowUp,
+  ArrowDown,
+  Check,
+  Archive,
+  ArchiveRestore,
+} from "lucide-react"
 import { useQueryStates } from "nuqs"
 import {
   inventoryParams,
@@ -64,6 +72,26 @@ export function InventoryToolbar() {
           </button>
         )}
       </div>
+
+      {/* Archive toggle button */}
+      <Button
+        variant={params.isArchived ? "secondary" : "ghost"}
+        size="sm"
+        className="h-9 gap-1 shrink-0"
+        onClick={() => setParams({ isArchived: !params.isArchived })}
+      >
+        {params.isArchived ? (
+          <>
+            <ArchiveRestore className="h-4 w-4" />
+            <span className="hidden sm:inline">返回库存</span>
+          </>
+        ) : (
+          <>
+            <Archive className="h-4 w-4" />
+            <span className="hidden sm:inline">已归档</span>
+          </>
+        )}
+      </Button>
 
       {/* Sort dropdown - 使用 onSelect + preventDefault 保持菜单开启 */}
       <DropdownMenu>

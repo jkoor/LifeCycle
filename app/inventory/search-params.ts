@@ -1,4 +1,5 @@
 import {
+  parseAsBoolean,
   parseAsString,
   parseAsStringLiteral,
   createSearchParamsCache,
@@ -32,6 +33,8 @@ export const inventoryParams = {
   // 排序相关参数
   sortBy: parseAsStringLiteral(sortByOptions).withDefault("remainingDays"),
   sortDir: parseAsStringLiteral(sortDirOptions).withDefault("asc"),
+  // 归档视图切换参数
+  isArchived: parseAsBoolean.withDefault(false),
 }
 
 export const searchParamsCache = createSearchParamsCache(inventoryParams)

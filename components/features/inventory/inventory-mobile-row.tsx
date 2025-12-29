@@ -10,6 +10,9 @@ import {
   Pin,
   PinOff,
   Loader2,
+  Archive,
+  ArchiveRestore,
+  Trash2,
 } from "lucide-react"
 import { RefreshCWIcon } from "@/components/ui/refresh-cw"
 import { format } from "date-fns"
@@ -34,7 +37,6 @@ import {
   ItemStockControl,
   ItemStatus,
   ItemRemainingDays,
-  ItemActions,
 } from "@/components/modules/item"
 import { AddItemModal } from "@/components/modules/item/ui"
 import { useDeleteDialog } from "@/components/common/delete-dialog-provider"
@@ -43,6 +45,7 @@ interface ItemMobileRowProps {
   item: InventoryItem
   categories: Category[]
   className?: string
+  isArchived?: boolean
 }
 
 /**
@@ -58,6 +61,7 @@ export function ItemMobileRow({
   item,
   categories,
   className,
+  isArchived,
 }: ItemMobileRowProps) {
   const { requestDelete } = useDeleteDialog()
 
@@ -76,6 +80,7 @@ export function ItemMobileRow({
   } = useItem(item)
 
   const isNotificationEnabled = (item.notifyAdvanceDays ?? 0) > 0
+  const isItemArchived = item.isArchived
 
   return (
     <Drawer>
@@ -175,95 +180,148 @@ export function ItemMobileRow({
               isStockFixed={item.isStockFixed}
               onUpdateStock={handleUpdateStock}
               size="md"
+              disabled={isItemArchived}
             />
           </div>
         </div>
 
-        {/* 操作按钮区域: 更换/Pin/通知 + 菜单(归档/删除) */}
+        {/* 操作按钮区域 */}
         <div className="px-4 py-3 border-t">
-          <div className="grid grid-cols-4 gap-2">
-            {/* 更换按钮 */}
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2",
-                statusState?.key === "expired"
-                  ? "border-destructive text-destructive hover:bg-destructive hover:text-white"
-                  : "hover:bg-primary hover:text-white"
-              )}
-              onClick={handleReplace}
-              disabled={isReplacing || (item.stock ?? 0) < 1}
-            >
-              {isReplacing ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : (
-                <RefreshCWIcon size={16} />
-              )}
-              <span className="text-xs">更换</span>
-            </Button>
+          {isItemArchived ? (
+            /* 归档物品：取消归档、删除 */
+            <div className="grid grid-cols-2 gap-2">
+              {/* 取消归档按钮 */}
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "flex flex-col items-center gap-1 h-auto py-2",
+                  "border-indigo-500 text-indigo-500 hover:bg-indigo-500 hover:text-white"
+                )}
+                onClick={handleToggleArchive}
+                disabled={isArchiving}
+              >
+                {isArchiving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <ArchiveRestore className="size-4" />
+                )}
+                <span className="text-xs">取消归档</span>
+              </Button>
 
-            {/* 置顶按钮 */}
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2",
-                item.isPinned
-                  ? "border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white"
-                  : "text-muted-foreground hover:bg-amber-500 hover:text-white"
-              )}
-              onClick={handleTogglePin}
-              disabled={isPinning}
-            >
-              {isPinning ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : item.isPinned ? (
-                <Pin className="size-4" />
-              ) : (
-                <PinOff className="size-4" />
-              )}
-              <span className="text-xs">{item.isPinned ? "取消" : "置顶"}</span>
-            </Button>
-
-            {/* 通知按钮 */}
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "flex flex-col items-center gap-1 h-auto py-2",
-                isNotificationEnabled
-                  ? "border-primary text-primary hover:bg-primary hover:text-white"
-                  : "text-muted-foreground hover:bg-muted"
-              )}
-              onClick={() => handleToggleNotification(!isNotificationEnabled)}
-              disabled={isUpdatingNotification}
-            >
-              {isUpdatingNotification ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : isNotificationEnabled ? (
-                <Bell className="size-4" />
-              ) : (
-                <BellOff className="size-4" />
-              )}
-              <span className="text-xs">
-                {isNotificationEnabled ? "通知" : "静音"}
-              </span>
-            </Button>
-
-            {/* 更多菜单 (归档/删除) */}
-            <div className="flex items-center justify-center">
-              <ItemActions
-                variant="dropdown"
-                size="md"
-                isArchived={item.isArchived}
-                isArchiving={isArchiving}
-                isDeleting={isDeleting}
-                onToggleArchive={handleToggleArchive}
-                onDelete={() => requestDelete({ id: item.id, name: item.name })}
-              />
+              {/* 删除按钮 */}
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "flex flex-col items-center gap-1 h-auto py-2",
+                  "border-destructive text-destructive hover:bg-destructive hover:text-white"
+                )}
+                onClick={() => requestDelete({ id: item.id, name: item.name })}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Trash2 className="size-4" />
+                )}
+                <span className="text-xs">删除</span>
+              </Button>
             </div>
-          </div>
+          ) : (
+            /* 未归档物品：更换、置顶、通知、归档 */
+            <div className="grid grid-cols-4 gap-2">
+              {/* 更换按钮 */}
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "flex flex-col items-center gap-1 h-auto py-2",
+                  statusState?.key === "expired"
+                    ? "border-destructive text-destructive hover:bg-destructive hover:text-white"
+                    : "hover:bg-primary hover:text-white"
+                )}
+                onClick={handleReplace}
+                disabled={isReplacing || (item.stock ?? 0) < 1}
+              >
+                {isReplacing ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <RefreshCWIcon size={16} />
+                )}
+                <span className="text-xs">更换</span>
+              </Button>
+
+              {/* 置顶按钮 */}
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "flex flex-col items-center gap-1 h-auto py-2",
+                  item.isPinned
+                    ? "border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-white"
+                    : "text-muted-foreground hover:bg-amber-500 hover:text-white"
+                )}
+                onClick={handleTogglePin}
+                disabled={isPinning}
+              >
+                {isPinning ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : item.isPinned ? (
+                  <Pin className="size-4" />
+                ) : (
+                  <PinOff className="size-4" />
+                )}
+                <span className="text-xs">
+                  {item.isPinned ? "取消" : "置顶"}
+                </span>
+              </Button>
+
+              {/* 通知按钮 */}
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "flex flex-col items-center gap-1 h-auto py-2",
+                  isNotificationEnabled
+                    ? "border-primary text-primary hover:bg-primary hover:text-white"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+                onClick={() => handleToggleNotification(!isNotificationEnabled)}
+                disabled={isUpdatingNotification}
+              >
+                {isUpdatingNotification ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : isNotificationEnabled ? (
+                  <Bell className="size-4" />
+                ) : (
+                  <BellOff className="size-4" />
+                )}
+                <span className="text-xs">
+                  {isNotificationEnabled ? "通知" : "静音"}
+                </span>
+              </Button>
+
+              {/* 归档按钮 */}
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "flex flex-col items-center gap-1 h-auto py-2",
+                  "text-muted-foreground hover:bg-indigo-500 hover:text-white"
+                )}
+                onClick={handleToggleArchive}
+                disabled={isArchiving}
+              >
+                {isArchiving ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Archive className="size-4" />
+                )}
+                <span className="text-xs">归档</span>
+              </Button>
+            </div>
+          )}
         </div>
 
         <DrawerFooter className="flex-row gap-2 pt-2">
