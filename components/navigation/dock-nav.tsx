@@ -3,7 +3,7 @@
 import React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, LayoutGrid, Plus, BarChart, User, Compass } from "lucide-react"
+import { Home, Box, Plus, BarChart, User, Compass } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
@@ -26,7 +26,7 @@ export function DockNav({ categories = [] }: DockNavProps) {
   // Define nav structure for cleaner mapping
   const navItems = [
     { href: "/dashboard", icon: Home, label: "首页" },
-    { href: "/inventory", icon: LayoutGrid, label: "管理" },
+    { href: "/inventory", icon: Box, label: "管理" },
     // Middle item is the Add button, handled separately
     { href: "/analysis", icon: Compass, label: "发现" }, // Using Compass for "Discovery/Analysis" to match reference vibe if needed, or stick to BarChart
     { href: "/me", icon: User, label: "我的" },
@@ -38,7 +38,7 @@ export function DockNav({ categories = [] }: DockNavProps) {
 
   return (
     <div className="fixed bottom-8 left-0 right-0 z-50 mx-auto flex w-max justify-center">
-      <div className="flex items-center gap-0.5 rounded-2xl border border-black/8 bg-background/85 px-2 py-1.5 shadow-lg shadow-black/10 dark:border-white/10 dark:bg-background/80">
+      <div className="flex items-center gap-0.5 rounded-2xl border border-black/8 bg-background/85 backdrop-blur-md px-2 py-1.5 shadow-lg shadow-black/10 dark:border-white/10 dark:bg-background/80">
         {/* Left Items */}
         {leftItems.map((item) => (
           <NavItem

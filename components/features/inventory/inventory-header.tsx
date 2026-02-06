@@ -1,4 +1,5 @@
 import { Category } from "@prisma/client"
+import { Box } from 'lucide-react';
 
 interface InventoryHeaderProps {
   categories: Category[]
@@ -7,12 +8,16 @@ interface InventoryHeaderProps {
 export function InventoryHeader({ categories }: InventoryHeaderProps) {
   return (
     <div className="flex items-center justify-between">
-      <div className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">Inventory</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your food items and track expiration dates.
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+          <Box className="h-8 w-8 text-primary" />
+          库存管理
+        </h1>
+        <p className="text-muted-foreground mt-1">
+          管理您的所有物品信息及状态
         </p>
       </div>
     </div>
   )
 }
+

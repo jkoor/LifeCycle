@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { getDashboardStats, getPinnedItems } from "@/app/actions/dashboard"
 import { StatsCards } from "@/components/features/dashboard/stats-cards"
 import { TrackedItems } from "@/components/features/dashboard/tracked-items"
+import { Home } from "lucide-react"
 
 export default async function DashboardPage() {
   const session = await getServerSession()
@@ -40,7 +41,10 @@ export default async function DashboardPage() {
     <div className="container mx-auto p-4 md:p-8 space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">仪表盘</h1>
+        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+          <Home className="h-8 w-8 text-primary" />
+          仪表盘
+        </h1>
         <p className="text-muted-foreground mt-1">
           快速查看库存状态和追踪重要物品
         </p>

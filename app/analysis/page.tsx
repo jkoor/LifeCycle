@@ -7,7 +7,7 @@ export default function AnalysisPage() {
             <div className="mb-8">
                 <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
                     <LineChart className="h-8 w-8 text-primary" />
-                    Analysis
+                    数据分析
                 </h1>
                 <p className="text-muted-foreground">
                     数据分析与可视化
