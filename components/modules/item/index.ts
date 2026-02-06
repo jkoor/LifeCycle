@@ -5,6 +5,7 @@ export type {
   ItemLifecycleStatus,
   ItemStatusState,
   UseItemReturn,
+  TrackerItemMock,
 } from "./types"
 
 // Utils
@@ -26,5 +27,6 @@ export {
   ItemStatus,
   ItemRemainingDays,
   ItemActions,
+  TrackerCard,
 } from "./ui"
 export type { ItemActionsProps } from "./ui"
