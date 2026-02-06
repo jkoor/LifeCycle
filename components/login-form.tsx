@@ -17,11 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import {
-  Field,
-  FieldDescription,
-  FieldSeparator,
-} from "@/components/ui/field"
+import { Field, FieldDescription, FieldSeparator } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -73,9 +69,7 @@ export function LoginForm({
         <BorderBeam size={250} duration={12} delay={9} />
         <CardHeader className="text-center">
           <CardTitle className="text-xl">欢迎回来</CardTitle>
-          <CardDescription>
-            使用您的邮箱和密码登录
-          </CardDescription>
+          <CardDescription>使用您的邮箱和密码登录</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -132,25 +126,30 @@ export function LoginForm({
                 )}
               />
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isPending}
-              >
+              <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
                 登录
               </Button>
 
               <FieldDescription className="text-center">
-                还没有账号? <a href="/auth/register" className="underline">立即注册</a>
+                还没有账号?{" "}
+                <a href="/register" className="underline">
+                  立即注册
+                </a>
               </FieldDescription>
             </form>
           </Form>
         </CardContent>
       </Card>
       <FieldDescription className="px-6 text-center">
-        继续即表示您同意我们的 <a href="#" className="underline">服务条款</a>{" "}
-        和 <a href="#" className="underline">隐私政策</a>
+        继续即表示您同意我们的{" "}
+        <a href="#" className="underline">
+          服务条款
+        </a>{" "}
+        和{" "}
+        <a href="#" className="underline">
+          隐私政策
+        </a>
       </FieldDescription>
     </div>
   )

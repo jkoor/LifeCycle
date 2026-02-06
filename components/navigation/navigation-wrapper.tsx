@@ -16,7 +16,7 @@ export function NavigationWrapper({ categories = [] }: NavigationWrapperProps) {
   const pathname = usePathname()
 
   // 不显示导航的路由路径
-  const hideNavPaths = ["/auth/login", "/auth/register"]
+  const hideNavPaths = ["/login", "/register"]
 
   // 检查是否应该隐藏导航
   const shouldHideNav = hideNavPaths.some((path) => pathname === path)

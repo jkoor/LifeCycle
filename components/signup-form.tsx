@@ -17,9 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import {
-  FieldDescription,
-} from "@/components/ui/field"
+import { FieldDescription } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -59,7 +57,7 @@ export function SignupForm({
       if (result.success) {
         toast.success(result.message)
         // 注册成功后跳转到登录页面
-        router.push("/auth/login")
+        router.push("/login")
       } else {
         setError(result.message)
         toast.error(result.message)
@@ -73,9 +71,7 @@ export function SignupForm({
         <BorderBeam size={250} duration={12} delay={9} />
         <CardHeader className="text-center">
           <CardTitle className="text-xl">创建账号</CardTitle>
-          <CardDescription>
-            输入您的信息以创建账号
-          </CardDescription>
+          <CardDescription>输入您的信息以创建账号</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -168,25 +164,30 @@ export function SignupForm({
                 密码必须至少 8 个字符，包含大小写字母和数字
               </FieldDescription>
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isPending}
-              >
+              <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
                 创建账号
               </Button>
 
               <FieldDescription className="text-center">
-                已有账号? <a href="/auth/login" className="underline">立即登录</a>
+                已有账号?{" "}
+                <a href="/login" className="underline">
+                  立即登录
+                </a>
               </FieldDescription>
             </form>
           </Form>
         </CardContent>
       </Card>
       <FieldDescription className="px-6 text-center">
-        继续即表示您同意我们的 <a href="#" className="underline">服务条款</a>{" "}
-        和 <a href="#" className="underline">隐私政策</a>
+        继续即表示您同意我们的{" "}
+        <a href="#" className="underline">
+          服务条款
+        </a>{" "}
+        和{" "}
+        <a href="#" className="underline">
+          隐私政策
+        </a>
       </FieldDescription>
     </div>
   )

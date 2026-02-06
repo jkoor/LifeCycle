@@ -24,7 +24,7 @@ export const authConfig: NextAuthConfig = {
 
   // 自定义页面路径
   pages: {
-    signIn: "/auth/login",
+    signIn: "/login",
     signOut: "/auth/logout",
     error: "/auth/error",
     newUser: "/dashboard", // 新用户注册后跳转
@@ -62,7 +62,7 @@ export const authConfig: NextAuthConfig = {
 
         const isPasswordValid = await compare(
           credentials.password as string,
-          user.password
+          user.password,
         )
 
         if (!isPasswordValid) {
