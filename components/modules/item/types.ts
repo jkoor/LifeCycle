@@ -13,11 +13,8 @@ import { StatusBadgeVariant } from "@/components/common"
  * 5. healthy - 正常状态
  */
 export type ItemLifecycleStatus =
-  | "out_of_stock"
-  | "expired"
-  | "expiring_soon"
-  | "low_stock"
-  | "healthy"
+  // | "out_of_stock"
+  "expired" | "expiring_soon" | "low_stock" | "healthy"
 
 /**
  * 物品状态对象
@@ -91,20 +88,4 @@ export interface UseItemReturn {
   daysRemaining: number | null
   /** 统一状态对象（推荐使用） */
   statusState: ItemStatusState
-}
-
-/**
- * Mock Item 类型（用于 Demo 和测试）
- *
- * 简化版的 Item 数据结构，包含 TrackerCard 所需的最小字段集
- */
-export interface TrackerItemMock {
-  id: string
-  name: string
-  image?: string
-  status: ItemLifecycleStatus
-  stock: number
-  totalDays: number
-  daysRemaining: number
-  category: string
 }

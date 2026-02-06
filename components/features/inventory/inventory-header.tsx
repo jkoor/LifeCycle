@@ -1,6 +1,3 @@
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
-import { AddItemModal } from "@/components/modules/item/ui"
 import { Category } from "@prisma/client"
 
 interface InventoryHeaderProps {
@@ -16,12 +13,6 @@ export function InventoryHeader({ categories }: InventoryHeaderProps) {
           Manage your food items and track expiration dates.
         </p>
       </div>
-      <AddItemModal categories={categories}>
-        <Button size="sm" className="gap-1">
-          <Plus className="w-4 h-4" />
-          Add Item
-        </Button>
-      </AddItemModal>
     </div>
   )
 }

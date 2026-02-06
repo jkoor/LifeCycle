@@ -12,115 +12,100 @@
 
 import * as React from "react"
 import { motion } from "motion/react"
-import {
-  CheckCircle2,
-  Package,
-  Timer,
-  XCircle,
-  AlertOctagon,
-} from "lucide-react"
-// Animated icons for interactive elements (per design guidelines)
-import { Plus, RefreshCcw } from "lucide-react" // TODO: Replace with lucide-animated when available
+import { Package } from "lucide-react"
+
+import { Lock, Plus, RefreshCcw } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { BorderBeam } from "@/components/ui/border-beam"
-import { Badge } from "@/components/ui/badge"
-import type { ItemLifecycleStatus, TrackerItemMock } from "../types"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { ItemStatus } from "./item-status"
+import { ItemAvatar } from "./item-avatar"
+import { useItem } from "../hooks/use-item"
+import { getRemainingDays } from "../utils"
+import type { InventoryItem } from "../types"
 
 interface TrackerCardProps {
-  item: TrackerItemMock
+  item: InventoryItem
   className?: string
 }
 
 export function TrackerCard({ item, className }: TrackerCardProps) {
-  // Calculate progress percentage
+  // Use the item hook for all operations
+  const { handleUpdateStock, handleReplace, isReplacing, statusState } =
+    useItem(item)
+
+  // Calculate remaining days and progress
+  const daysRemaining = getRemainingDays(item) ?? 0
+  const totalDays = item.lifespanDays || item.shelfLifeDays || 30
   const healthPercentage = Math.max(
     0,
-    Math.min(100, (item.daysRemaining / item.totalDays) * 100),
+    Math.min(100, (daysRemaining / totalDays) * 100),
   )
 
-  // Configuration map based on ItemLifecycleStatus
-  const statusConfig: Record<
-    ItemLifecycleStatus,
-    {
-      color: string
-      textColor: string
-      borderColor: string
-      bgGradient: string
-      icon: React.ElementType
-      label: string
-      buttonVariant:
-        | "default"
-        | "secondary"
-        | "destructive"
-        | "outline"
-        | "ghost"
-        | "link"
-    }
-  > = {
-    healthy: {
-      color: "bg-emerald-500",
-      textColor: "text-emerald-500",
-      borderColor: "border-emerald-500/20",
-      bgGradient: "from-emerald-500/10 to-transparent",
-      icon: CheckCircle2,
-      label: "状态良好",
-      buttonVariant: "secondary",
+  // Color configuration based on global StatusBadgeVariant system
+  // This ensures consistency with the status badge colors
+  const variantColorMap = {
+    destructive: {
+      // Red for critical states (expired, out of stock)
+      color: "bg-red-500",
+      borderColor: "border-red-500/20",
+      bgGradient: "from-red-500/10 to-transparent",
+      beamFrom: "#ef4444",
+      beamTo: "#dc2626",
     },
-    expiring_soon: {
+    warning: {
+      // Yellow/Amber for warning states (expiring soon, low stock)
       color: "bg-amber-500",
-      textColor: "text-amber-500",
       borderColor: "border-amber-500/20",
       bgGradient: "from-amber-500/10 to-transparent",
-      icon: Timer,
-      label: "即将过期",
-      buttonVariant: "default",
+      beamFrom: "#f59e0b",
+      beamTo: "#d97706",
     },
-    expired: {
-      color: "bg-slate-500",
-      textColor: "text-slate-500",
-      borderColor: "border-slate-500/20",
-      bgGradient: "from-slate-500/10 to-transparent",
-      icon: XCircle,
-      label: "已过期",
-      buttonVariant: "outline",
+    success: {
+      // Green for healthy state
+      color: "bg-green-500",
+      borderColor: "border-green-500/20",
+      bgGradient: "from-green-500/10 to-transparent",
+      beamFrom: "#22c55e",
+      beamTo: "#16a34a",
     },
-    low_stock: {
-      color: "bg-orange-500",
-      textColor: "text-orange-500",
-      borderColor: "border-orange-500/20",
-      bgGradient: "from-orange-500/10 to-transparent",
-      icon: Package,
-      label: "库存不足",
-      buttonVariant: "default",
+    info: {
+      // Blue for info state
+      color: "bg-blue-500",
+      borderColor: "border-blue-500/20",
+      bgGradient: "from-blue-500/10 to-transparent",
+      beamFrom: "#3b82f6",
+      beamTo: "#2563eb",
     },
-    out_of_stock: {
-      color: "bg-rose-500",
-      textColor: "text-rose-500",
-      borderColor: "border-rose-500/20",
-      bgGradient: "from-rose-500/10 to-transparent",
-      icon: AlertOctagon,
-      label: "已缺货",
-      buttonVariant: "destructive",
+    default: {
+      // Zinc for default state
+      color: "bg-zinc-500",
+      borderColor: "border-zinc-500/20",
+      bgGradient: "from-zinc-500/10 to-transparent",
+      beamFrom: "#71717a",
+      beamTo: "#52525b",
     },
   }
 
-  const config = statusConfig[item.status]
-  // const Icon = config.icon // Unused for now
+  // Use the variant from statusState to get colors
+  const colorConfig = variantColorMap[statusState.variant]
 
-  const isCritical =
-    item.status === "expiring_soon" ||
-    item.status === "low_stock" ||
-    item.status === "out_of_stock"
+  // Critical states need visual emphasis (border beam animation)
+  const isCritical = statusState.variant === "destructive"
 
   return (
     <Card
       className={cn(
         "relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-1",
         "border bg-card/50 backdrop-blur-md", // Glassmorphism base
-        config.borderColor,
+        colorConfig.borderColor,
         className,
       )}
     >
@@ -128,7 +113,7 @@ export function TrackerCard({ item, className }: TrackerCardProps) {
       <div
         className={cn(
           "absolute inset-0 bg-gradient-to-br opacity-30 pointer-events-none",
-          config.bgGradient,
+          colorConfig.bgGradient,
         )}
       />
 
@@ -136,50 +121,41 @@ export function TrackerCard({ item, className }: TrackerCardProps) {
       {isCritical && (
         <BorderBeam
           size={200}
-          duration={item.status === "out_of_stock" ? 8 : 12}
+          duration={statusState.variant === "destructive" ? 8 : 12}
           delay={0}
-          colorFrom={item.status === "out_of_stock" ? "#f43f5e" : "#f59e0b"}
-          colorTo={item.status === "out_of_stock" ? "#e11d48" : "#d97706"}
+          colorFrom={colorConfig.beamFrom}
+          colorTo={colorConfig.beamTo}
         />
       )}
 
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
         <div className="flex items-center gap-3">
-          {/* Avatar Placeholder */}
-          <div
-            className={cn(
-              "size-10 rounded-xl flex items-center justify-center bg-background/50 border shadow-inner",
-              config.borderColor,
-            )}
-          >
-            <span className="text-xl">🧴</span>
-          </div>
+          {/* Use ItemAvatar component */}
+          <ItemAvatar src={item.image} name={item.name} size="md" />
           <div>
             <h3 className="font-semibold leading-none tracking-tight">
               {item.name}
             </h3>
             <p className="text-xs text-muted-foreground mt-1">
-              {item.category}
+              {item.category.name}
+              {item.brand && (
+                <>
+                  <span className="mx-1 text-muted-foreground/50">/</span>
+                  <span>{item.brand}</span>
+                </>
+              )}
             </p>
           </div>
         </div>
-        <Badge
-          variant="outline"
-          className={cn(
-            "bg-background/50 backdrop-blur-sm",
-            config.textColor,
-            config.borderColor,
-          )}
-        >
-          {config.label}
-        </Badge>
+        {/* Use ItemStatus component */}
+        <ItemStatus item={item} />
       </CardHeader>
 
       <CardContent className="relative z-10 pt-4 pb-2">
         <div className="flex items-end justify-between mb-2">
           <div>
             <span className="text-3xl font-bold tracking-tighter tabular-nums">
-              {item.daysRemaining}
+              {daysRemaining}
             </span>
             <span className="text-xs text-muted-foreground ml-1">天剩余</span>
           </div>
@@ -196,32 +172,59 @@ export function TrackerCard({ item, className }: TrackerCardProps) {
             initial={{ width: 0 }}
             animate={{ width: `${healthPercentage}%` }}
             transition={{ duration: 1, ease: "easeOut" }}
-            className={cn("h-full rounded-full", config.color)}
+            className={cn("h-full rounded-full", colorConfig.color)}
           />
         </div>
       </CardContent>
 
       <CardFooter className="relative z-10 gap-2 pt-4">
-        {/* Left Button: Add Stock */}
-        <Button
-          variant="outline"
-          className="group flex-1 transition-all hover:shadow-md active:scale-95"
-          title="增加库存"
-        >
-          <Plus className="mr-2 size-4 transition-transform group-hover:scale-110 group-hover:rotate-90" />
-          补货
-        </Button>
+        {/* Left Button: Add Stock - Connected to real action */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="flex-1 flex">
+              <Button
+                variant="outline"
+                className="w-full group transition-all hover:shadow-md active:scale-95"
+                onClick={() => handleUpdateStock(1)}
+                disabled={item.isStockFixed}
+              >
+                {item.isStockFixed ? (
+                  <Lock className="mr-2 size-4" />
+                ) : (
+                  <Plus className="mr-2 size-4 transition-transform group-hover:scale-110 group-hover:rotate-90" />
+                )}
+                补货
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{item.isStockFixed ? "固定库存物品无需补货" : "增加库存"}</p>
+          </TooltipContent>
+        </Tooltip>
 
-        {/* Right Button: Replace / Action */}
-        {/* Note: Per design guidelines, primary action buttons should use lucide-animated */}
+        {/* Right Button: Replace - Connected to real action */}
+        {/* Button variant matches the status severity */}
         <Button
+          variant="secondary"
           className={cn(
-            "group flex-1 shadow-md transition-all hover:shadow-lg active:scale-95",
+            "group flex-1 shadow-sm transition-all hover:shadow-md active:scale-95",
+            statusState.variant === "destructive" &&
+              "bg-red-100 text-red-600 hover:bg-red-200 border border-red-200",
+            statusState.variant === "warning" &&
+              "bg-amber-100 text-amber-600 hover:bg-amber-200 border border-amber-200",
+            statusState.variant === "success" &&
+              "bg-green-100 text-green-600 hover:bg-green-200 border border-green-200",
           )}
-          variant={config.buttonVariant}
+          onClick={handleReplace}
+          disabled={isReplacing}
         >
-          <RefreshCcw className="mr-2 size-4 transition-transform group-hover:rotate-180 duration-500" />
-          {item.status === "expired" ? "重置" : "立即更换"}
+          <RefreshCcw
+            className={cn(
+              "mr-2 size-4 transition-transform duration-500",
+              isReplacing ? "animate-spin" : "group-hover:rotate-180",
+            )}
+          />
+          立即更换
         </Button>
       </CardFooter>
     </Card>

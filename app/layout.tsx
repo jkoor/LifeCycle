@@ -4,6 +4,9 @@ import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 import { SessionProvider } from "@/components/providers/session-provider"
 import { NavigationWrapper } from "@/components/navigation"
+import { ThemeProvider } from "@/components/theme-provider"
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
+import { prisma } from "@/lib/prisma"
 
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 
@@ -15,19 +18,29 @@ export const metadata: Metadata = {
   generator: "v0.app",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const categories = await prisma.category.findMany()
+
   return (
     <html lang="zh-CN" className={fontSans.variable}>
       <body className="antialiased">
         <NuqsAdapter>
           <SessionProvider>
-            <NavigationWrapper />
-            {/* 主内容区：移动端添加底部 padding 避免被悬浮导航遮挡 */}
-            <main className="pb-20 md:pb-0">{children}</main>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <NavigationWrapper categories={categories} />
+              <AnimatedThemeToggler className="fixed top-4 right-4 z-50 text-foreground" />
+              {/* 主内容区：移动端添加底部 padding 避免被悬浮导航遮挡 */}
+              <main className="pb-20 md:pb-0">{children}</main>
+            </ThemeProvider>
           </SessionProvider>
           <Toaster />
         </NuqsAdapter>

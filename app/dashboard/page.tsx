@@ -1,25 +1,66 @@
 import { getServerSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
+import { getDashboardStats, getPinnedItems } from "@/app/actions/dashboard"
+import { StatsCards } from "@/components/features/dashboard/stats-cards"
+import { TrackedItems } from "@/components/features/dashboard/tracked-items"
 
 export default async function DashboardPage() {
-    const session = await getServerSession()
+  const session = await getServerSession()
 
-    if (!session) {
-        redirect("/auth/login")
-    }
+  if (!session) {
+    redirect("/auth/login")
+  }
 
+  // Fetch dashboard data
+  const statsResult = await getDashboardStats()
+  const pinnedItemsResult = await getPinnedItems()
+
+  // Handle errors
+  if ("error" in statsResult) {
     return (
-        <div className="container mx-auto p-8">
-            <h1 className="text-3xl font-bold mb-4">Dashboard</h1>
-            <div className="bg-card p-6 rounded-lg shadow">
-                <h2 className="text-xl font-semibold mb-2">Welcome!</h2>
-                <p className="text-muted-foreground">
-                    You are logged in as: <strong>{session.user?.email}</strong>
-                </p>
-                <pre className="mt-4 p-4 bg-muted rounded text-sm overflow-auto">
-                    {JSON.stringify(session, null, 2)}
-                </pre>
-            </div>
+      <div className="container mx-auto p-8">
+        <div className="text-center text-destructive">
+          Failed to load dashboard statistics
         </div>
+      </div>
     )
+  }
+
+  if ("error" in pinnedItemsResult) {
+    return (
+      <div className="container mx-auto p-8">
+        <div className="text-center text-destructive">
+          Failed to load pinned items
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto p-4 md:p-8 space-y-8">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">仪表盘</h1>
+        <p className="text-muted-foreground mt-1">
+          快速查看库存状态和追踪重要物品
+        </p>
+      </div>
+
+      {/* Statistics Cards Section */}
+      <section>
+        <StatsCards stats={statsResult} />
+      </section>
+
+      {/* Item Tracking Section */}
+      <section>
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold">物品追踪</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            已置顶的物品将显示在此处
+          </p>
+        </div>
+        <TrackedItems items={pinnedItemsResult.items} />
+      </section>
+    </div>
+  )
 }
