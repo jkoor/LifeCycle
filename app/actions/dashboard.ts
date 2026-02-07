@@ -13,6 +13,13 @@ export interface DashboardStats {
   expiringSoon: number
   lowStock: number
   notificationsEnabled: number
+  totalValue: number
+  trends?: {
+    totalItems: number
+    totalValue: number
+    expiringSoon: number
+    lowStock: number
+  }
 }
 
 /**
@@ -74,11 +81,49 @@ export async function getDashboardStats(): Promise<
       (item) => item.notifyAdvanceDays >= 0,
     ).length
 
+    // Calculate total asset value
+    const totalValue = inventoryItems.reduce(
+      (acc, item) => acc + item.price * item.stock,
+      0,
+    )
+
+    // Calculate trends (Month over Month for Total Items)
+    const now = new Date()
+    const firstDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+
+    const itemsCreatedThisMonth = inventoryItems.filter(
+      (item) => new Date(item.createdAt) >= firstDayCurrentMonth,
+    ).length
+
+    const itemsCreatedLastMonth = inventoryItems.filter((item) => {
+      const d = new Date(item.createdAt)
+      return d >= firstDayLastMonth && d < firstDayCurrentMonth
+    }).length
+
+    let totalItemsTrend = 0
+    if (itemsCreatedLastMonth > 0) {
+      totalItemsTrend =
+        ((itemsCreatedThisMonth - itemsCreatedLastMonth) /
+          itemsCreatedLastMonth) *
+        100
+    } else if (itemsCreatedThisMonth > 0) {
+      totalItemsTrend = 100 // 100% increase if started from 0
+    }
+
     return {
       totalItems: inventoryItems.length,
       expiringSoon,
       lowStock,
       notificationsEnabled,
+      totalValue,
+      trends: {
+        totalItems: totalItemsTrend,
+        // Mocked trends for now as per plan
+        totalValue: 5.2,
+        expiringSoon: -2.1,
+        lowStock: 0,
+      },
     }
   } catch (error) {
     console.error("Failed to fetch dashboard stats:", error)

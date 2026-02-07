@@ -1,12 +1,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart } from 'lucide-react';
 
 export default function AnalysisPage() {
     return (
         <div className="container mx-auto p-4 md:p-6 lg:p-8">
             <div className="mb-8">
                 <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-                    <LineChart className="h-8 w-8 text-primary" />
                     数据分析
                 </h1>
                 <p className="text-muted-foreground">
