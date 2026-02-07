@@ -28,10 +28,13 @@ interface StatusBadgeProps {
  * 变体样式映射
  */
 const variantStyles: Record<StatusBadgeVariant, string> = {
-  destructive: "text-red-600 bg-red-100 hover:bg-red-200 border-red-200",
-  warning: "text-amber-600 bg-amber-100 hover:bg-amber-200 border-amber-200",
-  success: "text-green-600 bg-green-100 hover:bg-green-200 border-green-200",
-  info: "text-blue-600 bg-blue-100 hover:bg-blue-200 border-blue-200",
+  destructive:
+    "text-red-600 bg-red-100 hover:bg-red-200 border-red-200 dark:text-red-400 dark:bg-red-950 dark:hover:bg-red-900 dark:border-red-800",
+  warning:
+    "text-amber-600 bg-amber-100 hover:bg-amber-200 border-amber-200 dark:text-amber-400 dark:bg-amber-950 dark:hover:bg-amber-900 dark:border-amber-800",
+  success:
+    "text-green-600 bg-green-100 hover:bg-green-200 border-green-200 dark:text-green-400 dark:bg-green-950 dark:hover:bg-green-900 dark:border-green-800",
+  info: "text-blue-600 bg-blue-100 hover:bg-blue-200 border-blue-200 dark:text-blue-400 dark:bg-blue-950 dark:hover:bg-blue-900 dark:border-blue-800",
   default: "text-muted-foreground bg-muted hover:bg-muted/80",
 }
 

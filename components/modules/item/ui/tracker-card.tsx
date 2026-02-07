@@ -209,11 +209,11 @@ export function TrackerCard({ item, className }: TrackerCardProps) {
           className={cn(
             "group flex-1 shadow-sm transition-all hover:shadow-md active:scale-95",
             statusState.variant === "destructive" &&
-              "bg-red-100 text-red-600 hover:bg-red-200 border border-red-200",
+              "bg-red-100 text-red-600 hover:bg-red-200 border border-red-200 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900 dark:border-red-800",
             statusState.variant === "warning" &&
-              "bg-amber-100 text-amber-600 hover:bg-amber-200 border border-amber-200",
+              "bg-amber-100 text-amber-600 hover:bg-amber-200 border border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:hover:bg-amber-900 dark:border-amber-800",
             statusState.variant === "success" &&
-              "bg-green-100 text-green-600 hover:bg-green-200 border border-green-200",
+              "bg-green-100 text-green-600 hover:bg-green-200 border border-green-200 dark:bg-green-950 dark:text-green-400 dark:hover:bg-green-900 dark:border-green-800",
           )}
           onClick={handleReplace}
           disabled={isReplacing}

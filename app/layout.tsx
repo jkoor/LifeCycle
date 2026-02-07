@@ -42,7 +42,7 @@ export default async function RootLayout({
   const categories = await prisma.category.findMany()
 
   return (
-    <html lang="zh-CN" className={fontSans.variable}>
+    <html lang="zh-CN" className={fontSans.variable} suppressHydrationWarning>
       <body className="antialiased">
         <NuqsAdapter>
           <SessionProvider>

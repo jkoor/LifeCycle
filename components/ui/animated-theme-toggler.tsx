@@ -1,14 +1,28 @@
 "use client"
 
 import { useCallback, useRef } from "react"
-import { Moon, Sun } from "lucide-react"
+import { SunMoon, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { flushSync } from "react-dom"
 
 import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface AnimatedThemeTogglerProps extends React.ComponentPropsWithoutRef<"button"> {
   duration?: number
+}
+
+const themeOrder = ["light", "dark", "system"] as const
+type ThemeType = (typeof themeOrder)[number]
+
+const themeLabels: Record<ThemeType, string> = {
+  light: "亮色模式",
+  dark: "暗色模式",
+  system: "跟随系统",
 }
 
 export const AnimatedThemeToggler = ({
@@ -16,13 +30,23 @@ export const AnimatedThemeToggler = ({
   duration = 400,
   ...props
 }: AnimatedThemeTogglerProps) => {
-  const { theme, setTheme } = useTheme()
+  const { theme, resolvedTheme, setTheme } = useTheme()
   const buttonRef = useRef<HTMLButtonElement>(null)
+
+  // Get the icon based on current theme state
+  const ThemeIcon =
+    theme === "system"
+      ? SunMoon // System mode shows monitor icon
+      : resolvedTheme === "dark"
+        ? Sun // Dark mode shows sun (click to switch to light)
+        : Moon // Light mode shows moon (click to switch to dark)
 
   const toggleTheme = useCallback(async () => {
     if (!buttonRef.current) return
 
-    const newTheme = theme === "dark" ? "light" : "dark"
+    // Three-state cycling: light -> dark -> system -> light
+    const currentIndex = themeOrder.indexOf((theme as ThemeType) || "system")
+    const newTheme = themeOrder[(currentIndex + 1) % 3]
 
     // @ts-ignore
     if (!document.startViewTransition) {
@@ -62,14 +86,21 @@ export const AnimatedThemeToggler = ({
   }, [theme, setTheme, duration])
 
   return (
-    <button
-      ref={buttonRef}
-      onClick={toggleTheme}
-      className={cn(className)}
-      {...props}
-    >
-      {theme === "dark" ? <Sun /> : <Moon />}
-      <span className="sr-only">Toggle theme</span>
-    </button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          ref={buttonRef}
+          onClick={toggleTheme}
+          className={cn(className)}
+          {...props}
+        >
+          <ThemeIcon className="size-5" />
+          <span className="sr-only">Toggle theme</span>
+        </button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{themeLabels[(theme as ThemeType) || "system"]}</p>
+      </TooltipContent>
+    </Tooltip>
   )
 }
