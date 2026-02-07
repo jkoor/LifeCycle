@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
@@ -16,6 +16,22 @@ export const metadata: Metadata = {
   title: "LifeCycle - 智能生活管理平台",
   description: "数据驱动的生活方式管理工具",
   generator: "v0.app",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "LifeCycle",
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false, // Optional: makes it feel more native, but considering accessibility
 }
 
 export default async function RootLayout({

@@ -10,7 +10,7 @@ import { InventoryItem, ItemStatusState } from "./types"
 export const THRESHOLD_EXPIRING_SOON_DAYS = 7
 
 /** 低库存警告阈值 */
-export const THRESHOLD_LOW_STOCK = 2
+export const THRESHOLD_LOW_STOCK = 1
 
 // ============================================================================
 // 核心状态逻辑 (Single Source of Truth)
@@ -74,7 +74,7 @@ export function getItemStatus(item: InventoryItem): ItemStatusState {
   const daysLeft = getRemainingDays(item)
 
   // Priority 1: 缺货
-  if (stock <= 0) {
+  if (stock <= -1) {
     return {
       key: "out_of_stock",
       label: "缺货",
