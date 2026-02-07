@@ -38,6 +38,31 @@ model User {
 
   // Better-Auth Plugins
   twoFactorEnabled Boolean? @default(false)
+  twoFactors       TwoFactor[]
+  passkeys         Passkey[]
+}
+
+model TwoFactor {
+  id          String  @id @default(cuid())
+  secret      String
+  backupCodes String
+  userId      String
+  user        User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Passkey {
+  id           String    @id @default(cuid())
+  name         String?
+  publicKey    String
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialID String
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  createdAt    DateTime? @default(now())
+  aaguid       String?
 }
 
 model Session {

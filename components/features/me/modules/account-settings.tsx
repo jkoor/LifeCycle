@@ -23,12 +23,19 @@ import {
   Camera,
   KeyRound,
   Shield,
+  Fingerprint,
   Trash2,
   Loader2,
-  ChevronRight,
+  LogOut,
 } from "lucide-react"
 import { toast } from "sonner"
+import { signOut } from "@/lib/auth-client"
 import { updateUserName, updateUserAvatar } from "@/app/actions/user"
+import { ChangePasswordDialog } from "./change-password-dialog"
+import { TwoFactorDialog } from "./two-factor-dialog"
+import { PasskeyDialog } from "./passkey-dialog"
+import { DeleteAccountDialog } from "./delete-account-dialog"
+import { Badge } from "@/components/ui/badge"
 
 interface AccountSettingsProps {
   user: User
@@ -45,10 +52,18 @@ interface AccountSettingsProps {
 export function AccountSettings({ user }: AccountSettingsProps) {
   const [isNameDialogOpen, setIsNameDialogOpen] = useState(false)
   const [isAvatarDialogOpen, setIsAvatarDialogOpen] = useState(false)
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false)
+  const [isTwoFactorDialogOpen, setIsTwoFactorDialogOpen] = useState(false)
+  const [isPasskeyDialogOpen, setIsPasskeyDialogOpen] = useState(false)
+  const [isDeleteAccountDialogOpen, setIsDeleteAccountDialogOpen] = useState(false)
   const [name, setName] = useState(user.name || "")
   const [avatarUrl, setAvatarUrl] = useState(user.image || "")
   const [isUpdatingName, setIsUpdatingName] = useState(false)
   const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false)
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(
+    user.twoFactorEnabled ?? false
+  )
+  const [passkeyCount, setPasskeyCount] = useState(0)
 
   // Display state (optimistic updates)
   const [displayName, setDisplayName] = useState(user.name || "")
@@ -56,11 +71,11 @@ export function AccountSettings({ user }: AccountSettingsProps) {
 
   const initials = displayName
     ? displayName
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
     : "U"
 
   // 处理昵称更新
@@ -183,18 +198,39 @@ export function AccountSettings({ user }: AccountSettingsProps) {
               label="修改密码"
               description="建议定期更换密码"
               showArrow
-              onClick={() => {}}
+              onClick={() => setIsPasswordDialogOpen(true)}
             >
               <KeyRound className="h-4 w-4 text-muted-foreground" />
             </SettingsRow>
 
             <SettingsRow
               label="两步验证"
-              description="增强账户安全性"
+              description={twoFactorEnabled ? "已启用 TOTP 验证" : "增强账户安全性"}
               showArrow
-              onClick={() => {}}
+              onClick={() => setIsTwoFactorDialogOpen(true)}
             >
-              <Shield className="h-4 w-4 text-muted-foreground" />
+              {twoFactorEnabled ? (
+                <Badge variant="outline" className="text-green-600 border-green-600/30 bg-green-50 dark:bg-green-950/30">
+                  已启用
+                </Badge>
+              ) : (
+                <Shield className="h-4 w-4 text-muted-foreground" />
+              )}
+            </SettingsRow>
+
+            <SettingsRow
+              label="通行密钥"
+              description={passkeyCount > 0 ? `已注册 ${passkeyCount} 个通行密钥` : "使用指纹、面容或设备 PIN 登录"}
+              showArrow
+              onClick={() => setIsPasskeyDialogOpen(true)}
+            >
+              {passkeyCount > 0 ? (
+                <Badge variant="outline" className="text-green-600 border-green-600/30 bg-green-50 dark:bg-green-950/30">
+                  {passkeyCount} 个
+                </Badge>
+              ) : (
+                <Fingerprint className="h-4 w-4 text-muted-foreground" />
+              )}
             </SettingsRow>
           </SettingsGroup>
         </SettingsCard>
@@ -203,15 +239,35 @@ export function AccountSettings({ user }: AccountSettingsProps) {
       {/* 危险区域 */}
       <SettingsSection title="危险区域">
         <SettingsCard className="!p-0 md:!p-0 border-destructive/30">
-          <SettingsRow
-            label="删除账户"
-            description="永久删除您的账户和所有数据"
-            onClick={() => {}}
-            className="text-destructive"
-          >
-            <Trash2 className="h-4 w-4 text-destructive" />
-            <ChevronRight className="h-4 w-4 text-destructive/50" />
-          </SettingsRow>
+          <SettingsGroup>
+            <SettingsRow
+              label="退出登录"
+              description="退出当前账户"
+              showArrow
+              onClick={async () => {
+                await signOut({
+                  fetchOptions: {
+                    onSuccess: () => {
+                      window.location.href = "/login"
+                    },
+                  },
+                })
+              }}
+              className="text-destructive"
+            >
+              <LogOut className="h-4 w-4 text-destructive" />
+            </SettingsRow>
+
+            <SettingsRow
+              label="删除账户"
+              description="永久删除您的账户和所有数据"
+              showArrow
+              onClick={() => setIsDeleteAccountDialogOpen(true)}
+              className="text-destructive"
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </SettingsRow>
+          </SettingsGroup>
         </SettingsCard>
       </SettingsSection>
 
@@ -248,6 +304,33 @@ export function AccountSettings({ user }: AccountSettingsProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 修改密码对话框 */}
+      <ChangePasswordDialog
+        open={isPasswordDialogOpen}
+        onOpenChange={setIsPasswordDialogOpen}
+      />
+
+      {/* 两步验证对话框 */}
+      <TwoFactorDialog
+        open={isTwoFactorDialogOpen}
+        onOpenChange={setIsTwoFactorDialogOpen}
+        isEnabled={twoFactorEnabled}
+        onStatusChange={setTwoFactorEnabled}
+      />
+
+      {/* 通行密钥对话框 */}
+      <PasskeyDialog
+        open={isPasskeyDialogOpen}
+        onOpenChange={setIsPasskeyDialogOpen}
+        onPasskeyCountChange={setPasskeyCount}
+      />
+
+      {/* 删除账户对话框 */}
+      <DeleteAccountDialog
+        open={isDeleteAccountDialogOpen}
+        onOpenChange={setIsDeleteAccountDialogOpen}
+      />
 
       {/* 修改头像对话框 */}
       <Dialog open={isAvatarDialogOpen} onOpenChange={setIsAvatarDialogOpen}>
