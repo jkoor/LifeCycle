@@ -1,3 +1,6 @@
 export { StatusBadge, type StatusBadgeVariant } from "./status-badge"
 export { IconButton, PinToggleButton } from "./icon-button"
 export { DeleteDialogProvider, useDeleteDialog } from "./delete-dialog-provider"
+export { PageHeader } from "./page-header"
+export { PageContent } from "./page-content"
+export { PageContainer } from "./page-container"

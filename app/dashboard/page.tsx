@@ -1,9 +1,7 @@
 import { getServerSession } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getDashboardStats, getPinnedItems } from "@/app/actions/dashboard"
-import { StatsCards } from "@/components/features/dashboard/stats-cards"
-import { TrackedItems } from "@/components/features/dashboard/tracked-items"
-import { Home } from 'lucide-react';
+import { DashboardContent } from "@/components/features/dashboard/dashboard-content"
 
 export default async function DashboardPage() {
   const session = await getServerSession()
@@ -38,34 +36,6 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto p-4 md:p-8 space-y-8">
-      {/* Page Header */}
-      <div>
-        <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
-                首页
-            </h1>
-            <p className="text-muted-foreground">
-                快速查看库存状态和追踪重要物品
-            </p>
-        </div>
-      </div>
-
-      {/* Statistics Cards Section */}
-      <section>
-        <StatsCards stats={statsResult} />
-      </section>
-
-      {/* Item Tracking Section */}
-      <section>
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold">物品追踪</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            已置顶的物品将显示在此处
-          </p>
-        </div>
-        <TrackedItems items={pinnedItemsResult.items} />
-      </section>
-    </div>
+    <DashboardContent stats={statsResult} items={pinnedItemsResult.items} />
   )
 }

@@ -1,13 +1,7 @@
 "use client"
 
-import { User } from "next-auth"
-import {
-  User as UserIcon,
-  Palette,
-  Settings,
-  Bell,
-  ChevronRight,
-} from "lucide-react"
+import { User } from "better-auth"
+import { User as UserIcon, Palette, Settings, Bell } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AccountSettings } from "./modules/account-settings"
 import { AppearanceSettings } from "./modules/appearance-settings"
@@ -15,6 +9,8 @@ import { GeneralSettings } from "./modules/general-settings"
 import { NotificationsSettings } from "./modules/notifications-settings"
 import type { SettingsTabConfig } from "@/components/modules/settings/types"
 import { cn } from "@/lib/utils"
+import { PageHeader } from "@/components/common/page-header"
+import { PageContent } from "@/components/common/page-content"
 
 interface SettingsPageProps {
   user: User
@@ -56,106 +52,103 @@ const settingsTabs: SettingsTabConfig[] = [
  */
 export function SettingsPage({ user }: SettingsPageProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-muted/30 md:bg-transparent">
-      {/* 页面标题 - 移动端更紧凑 */}
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="px-4 py-4 md:py-6 sm:px-6 lg:px-8">
-          <h1 className="text-xl font-bold tracking-tight md:text-2xl lg:text-3xl">
-            设置
-          </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground md:mt-1 md:text-sm">
-            管理您的账户信息和偏好设置
-          </p>
-        </div>
-      </header>
-
-      {/* 设置内容 */}
+    <div className="flex flex-col md:h-full md:overflow-hidden bg-muted/30 md:bg-transparent">
       <Tabs
         defaultValue="account"
         orientation="vertical"
-        className="flex flex-1 flex-col md:flex-row"
+        className="flex min-h-0 flex-1 flex-col h-full"
       >
-        {/* 移动端 Tabs 导航 - 分段控制器风格 */}
-        <div className="sticky top-[73px] z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 py-3 md:hidden">
-          <TabsList className="grid h-12 w-full grid-cols-4 gap-1 rounded-xl bg-muted p-1">
-            {settingsTabs.map((tab) => (
-              <TabsTrigger
-                key={tab.id}
-                value={tab.id}
-                className={cn(
-                  "rounded-lg px-1 py-1 text-xs font-medium transition-all",
-                  "data-[state=active]:bg-background data-[state=active]:shadow-sm",
-                  "data-[state=active]:text-foreground",
-                  "data-[state=inactive]:text-muted-foreground",
-                )}
+        {/* 页面标题 - 传入 Mobile Tabs */}
+        <PageHeader
+          title="设置"
+          description="管理您的账户信息和偏好设置"
+          bottom={
+            <div className="mt-4 md:hidden">
+              <TabsList className="grid h-12 w-full grid-cols-4 gap-1 rounded-xl bg-muted p-1">
+                {settingsTabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className={cn(
+                      "rounded-lg px-1 py-1 text-xs font-medium transition-all",
+                      "data-[state=active]:bg-background data-[state=active]:shadow-sm",
+                      "data-[state=active]:text-foreground",
+                      "data-[state=inactive]:text-muted-foreground",
+                    )}
+                  >
+                    <div className="flex flex-col items-center justify-center gap-0.5 w-full text-center">
+                      {tab.icon}
+                      <span className="text-[10px] leading-tight">
+                        {tab.label}
+                      </span>
+                    </div>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+          }
+        />
+
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+          {/* 桌面端侧边栏导航 */}
+          <aside className="hidden w-64 shrink-0 overflow-y-auto border-r md:block">
+            <nav className="p-4">
+              <TabsList
+                variant="line"
+                className="flex h-auto w-full flex-col items-stretch gap-1 bg-transparent p-0"
               >
-                <div className="flex flex-col items-center justify-center gap-0.5 w-full text-center">
-                  {tab.icon}
-                  <span className="text-[10px] leading-tight">{tab.label}</span>
-                </div>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+                {settingsTabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className="justify-start gap-3 rounded-lg border-none px-3 py-2.5 text-left data-[state=active]:bg-muted"
+                  >
+                    {tab.icon}
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">{tab.label}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {tab.description}
+                      </span>
+                    </div>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </nav>
+          </aside>
+
+          {/* 设置内容区 */}
+          <PageContent className="min-h-0">
+            <div className="mx-auto max-w-2xl px-4 py-4 md:py-6 sm:px-6 lg:px-8">
+              <TabsContent
+                value="account"
+                className="mt-0 focus-visible:outline-none focus-visible:ring-0"
+              >
+                <AccountSettings user={user} />
+              </TabsContent>
+
+              <TabsContent
+                value="appearance"
+                className="mt-0 focus-visible:outline-none focus-visible:ring-0"
+              >
+                <AppearanceSettings />
+              </TabsContent>
+
+              <TabsContent
+                value="general"
+                className="mt-0 focus-visible:outline-none focus-visible:ring-0"
+              >
+                <GeneralSettings />
+              </TabsContent>
+
+              <TabsContent
+                value="notifications"
+                className="mt-0 focus-visible:outline-none focus-visible:ring-0"
+              >
+                <NotificationsSettings />
+              </TabsContent>
+            </div>
+          </PageContent>
         </div>
-
-        {/* 桌面端侧边栏导航 */}
-        <aside className="hidden w-64 shrink-0 border-r md:block">
-          <nav className="sticky top-0 p-4">
-            <TabsList
-              variant="line"
-              className="flex h-auto w-full flex-col items-stretch gap-1 bg-transparent p-0"
-            >
-              {settingsTabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.id}
-                  value={tab.id}
-                  className="justify-start gap-3 rounded-lg border-none px-3 py-2.5 text-left data-[state=active]:bg-muted"
-                >
-                  {tab.icon}
-                  <div className="flex flex-col items-start">
-                    <span className="font-medium">{tab.label}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {tab.description}
-                    </span>
-                  </div>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </nav>
-        </aside>
-
-        {/* 设置内容区 */}
-        <main className="flex-1 overflow-auto">
-          <div className="mx-auto max-w-2xl px-4 py-4 md:py-6 sm:px-6 lg:px-8">
-            <TabsContent
-              value="account"
-              className="mt-0 focus-visible:outline-none focus-visible:ring-0"
-            >
-              <AccountSettings user={user} />
-            </TabsContent>
-
-            <TabsContent
-              value="appearance"
-              className="mt-0 focus-visible:outline-none focus-visible:ring-0"
-            >
-              <AppearanceSettings />
-            </TabsContent>
-
-            <TabsContent
-              value="general"
-              className="mt-0 focus-visible:outline-none focus-visible:ring-0"
-            >
-              <GeneralSettings />
-            </TabsContent>
-
-            <TabsContent
-              value="notifications"
-              className="mt-0 focus-visible:outline-none focus-visible:ring-0"
-            >
-              <NotificationsSettings />
-            </TabsContent>
-          </div>
-        </main>
       </Tabs>
     </div>
   )

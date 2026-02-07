@@ -1,14 +1,15 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react"
+import React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Home, Box, Plus, Compass, User } from "lucide-react"
-import { motion, useMotionValue, useTransform, useSpring } from "motion/react"
+import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { AddItemModal } from "@/components/modules/item/ui"
 import { Category } from "@prisma/client"
+import { useScrollState } from "@/components/providers/scroll-provider"
 
 interface DockNavProps {
   categories?: Category[]
@@ -16,32 +17,7 @@ interface DockNavProps {
 
 export function DockNav({ categories = [] }: DockNavProps) {
   const pathname = usePathname()
-  const [isVisible, setIsVisible] = useState(true)
-  const lastScrollY = useRef(0)
-  const scrollThreshold = 10 // Minimum scroll distance to trigger hide/show
-
-  // Scroll detection for hide/show behavior
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY
-      const scrollDelta = currentScrollY - lastScrollY.current
-
-      // Only trigger if scroll delta exceeds threshold
-      if (Math.abs(scrollDelta) > scrollThreshold) {
-        if (scrollDelta > 0 && currentScrollY > 100) {
-          // Scrolling down & past initial content
-          setIsVisible(false)
-        } else {
-          // Scrolling up
-          setIsVisible(true)
-        }
-        lastScrollY.current = currentScrollY
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+  const { isScrollingDown } = useScrollState()
 
   // Check if path is active
   const isPathActive = (href: string) => {
@@ -61,10 +37,9 @@ export function DockNav({ categories = [] }: DockNavProps) {
 
   return (
     <motion.div
-      initial={{ y: 0, opacity: 1 }}
+      initial={{ y: 0 }}
       animate={{
-        y: isVisible ? 0 : 100,
-        opacity: isVisible ? 1 : 0,
+        y: isScrollingDown ? 120 : 0,
       }}
       transition={{
         type: "spring",
@@ -77,13 +52,13 @@ export function DockNav({ categories = [] }: DockNavProps) {
       <div
         className={cn(
           "relative flex items-center gap-1 rounded-[22px] px-2.5 py-2",
-          // Enhanced glassmorphism
-          "bg-white/70 dark:bg-black/60",
-          "backdrop-blur-xl backdrop-saturate-[1.8]",
+          // Enhanced glassmorphism (More premium blur)
+          "bg-white/40 dark:bg-black/40",
+          "backdrop-blur-3xl backdrop-saturate-[2.0]",
           // Subtle multi-layer border effect
-          "border border-white/50 dark:border-white/10",
-          "shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.4)]",
-          "dark:shadow-[0_8px_32px_rgba(0,0,0,0.4),0_2px_8px_rgba(0,0,0,0.2),inset_0_1px_1px_rgba(255,255,255,0.05)]",
+          "border border-white/40 dark:border-white/10",
+          "shadow-[0_8px_32px_rgba(0,0,0,0.12),0_2px_8px_rgba(0,0,0,0.08),inset_0_1px_1px_rgba(255,255,255,0.3)]",
+          "dark:shadow-[0_8px_32px_rgba(0,0,0,0.5),0_2px_8px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.05)]",
         )}
       >
         {/* Subtle inner glow overlay */}
