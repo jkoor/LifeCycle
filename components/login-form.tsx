@@ -143,7 +143,7 @@ export function LoginForm({
       <Card className="relative overflow-hidden">
         <BorderBeam size={250} duration={12} delay={9} />
         <CardHeader className="text-center flex flex-col items-center gap-4">
-          <Logo className="scale-125 mb-2" />
+          {/* <Logo className="scale-90 mb-2" /> */}
           <div className="space-y-1">
             <CardTitle className="text-xl">
               {showTwoFactor ? "两步验证" : "欢迎回来"}

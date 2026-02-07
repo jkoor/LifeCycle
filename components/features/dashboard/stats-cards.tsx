@@ -50,7 +50,7 @@ export function StatsCards({ stats, className }: StatsCardsProps) {
       colorClass: "text-primary",
       iconBg: "bg-primary/15",
       trend: stats.trends?.totalItems || 0,
-      trendLabel: "较上月",
+      // trendLabel: "较上月",
     },
     {
       label: "资产总值",
@@ -60,7 +60,7 @@ export function StatsCards({ stats, className }: StatsCardsProps) {
       iconBg: "bg-blue-500/15",
       isCurrency: true,
       trend: stats.trends?.totalValue || 0,
-      trendLabel: "较上月",
+      // trendLabel: "较上月",
     },
     {
       label: "即将过期",
@@ -69,7 +69,7 @@ export function StatsCards({ stats, className }: StatsCardsProps) {
       colorClass: "text-amber-500",
       iconBg: "bg-amber-500/15",
       trend: stats.trends?.expiringSoon || 0,
-      trendLabel: "较上月",
+      // trendLabel: "较上月",
       inverseTrend: true, // Lower is better
     },
     {
@@ -79,7 +79,7 @@ export function StatsCards({ stats, className }: StatsCardsProps) {
       colorClass: "text-destructive",
       iconBg: "bg-destructive/15",
       trend: stats.trends?.lowStock || 0,
-      trendLabel: "较上月",
+      // trendLabel: "较上月",
       inverseTrend: true, // Lower is better
     },
   ]

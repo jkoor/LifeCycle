@@ -77,7 +77,7 @@ export function SignupForm({
       <Card className="relative overflow-hidden">
         <BorderBeam size={250} duration={12} delay={9} />
         <CardHeader className="text-center flex flex-col items-center gap-4">
-          <Logo className="scale-125 mb-2" />
+          {/* <Logo className="scale-125 mb-2" /> */}
           <div className="space-y-1">
             <CardTitle className="text-xl">创建账号</CardTitle>
             <CardDescription>输入您的信息以创建账号</CardDescription>

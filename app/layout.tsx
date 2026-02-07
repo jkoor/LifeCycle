@@ -7,6 +7,8 @@ import { NavigationWrapper } from "@/components/navigation"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
 import { prisma } from "@/lib/prisma"
+import { PWAInstallPrompt } from "@/components/features/pwa-install-prompt"
+import { OfflineIndicator } from "@/components/features/offline-indicator"
 
 import { NuqsAdapter } from "nuqs/adapters/next/app"
 
@@ -16,17 +18,29 @@ export const metadata: Metadata = {
   title: "LifeCycle - 智能生活管理平台",
   description: "数据驱动的生活方式管理工具",
   generator: "v0.app",
+  applicationName: "LifeCycle",
+  keywords: ["生活管理", "数据驱动", "智能管理", "LifeCycle"],
   icons: {
     icon: [
       { url: "/logo.svg", type: "image/svg+xml" },
       { url: "/favicon.ico", sizes: "any" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: "/apple-icon.png",
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180" },
+    ],
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "LifeCycle",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
   },
 }
 
@@ -59,6 +73,7 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <ClientLayout>
+              <OfflineIndicator />
               {/* Desktop: 整体容器带圆角和阴影 */}
               <div className="flex min-h-screen flex-col md:flex-row md:h-screen md:overflow-hidden md:p-3 md:gap-3 bg-neutral-100 dark:bg-neutral-900">
                 <NavigationWrapper categories={categories} />
@@ -68,6 +83,7 @@ export default async function RootLayout({
                   {children}
                 </main>
               </div>
+              <PWAInstallPrompt />
             </ClientLayout>
           </ThemeProvider>
           <Toaster />
