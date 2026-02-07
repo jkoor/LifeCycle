@@ -40,6 +40,9 @@ model User {
   twoFactorEnabled Boolean? @default(false)
   twoFactors       TwoFactor[]
   passkeys         Passkey[]
+
+  // Webhook 通知
+  webhookConfigs   WebhookConfig[]
 }
 
 model TwoFactor {
@@ -225,4 +228,33 @@ model UsageLog {
   @@index([itemId])
   @@index([userId])
   @@index([replacedAt])
+}
+
+// ==========================================
+// 🔔 Webhook 通知配置
+// ==========================================
+
+model WebhookConfig {
+  id               String   @id @default(cuid())
+  
+  name             String   // 配置名称，如 "企业微信通知"
+  url              String   // Webhook URL
+  enabled          Boolean  @default(true)
+  
+  // 自定义通知模板
+  titleTemplate    String   @default("【物品到期提醒】") // 通知标题模板
+  contentTemplate  String   @default("您的物品 {{itemName}} 将于 {{expiryDate}} 到期，请及时处理。") // 通知内容模板
+  
+  // 自定义请求参数名（适配不同渠道）
+  titleKey         String   @default("title")   // 标题字段的参数名，如 title / subject
+  contentKey       String   @default("content") // 内容字段的参数名，如 content / body / message
+  
+  // 关联用户
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId])
 }

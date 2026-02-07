@@ -23,12 +23,19 @@ export interface SettingsPageProps {
 }
 
 /**
- * 通知设置类型
+ * 通知设置类型 (Webhook)
  */
 export interface NotificationSettings {
-  pushEnabled: boolean
-  emailEnabled: boolean
-  frequency: "immediate" | "daily" | "weekly"
+  webhookConfigs: WebhookConfigSettings[]
+}
+
+export interface WebhookConfigSettings {
+  id: string
+  name: string
+  url: string
+  enabled: boolean
+  titleTemplate: string
+  contentTemplate: string
 }
 
 /**
