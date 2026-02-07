@@ -14,7 +14,7 @@ import { StatusBadgeVariant } from "@/components/common"
  */
 export type ItemLifecycleStatus =
   // | "out_of_stock"
-  "expired" | "expiring_soon" | "low_stock" | "healthy"
+  "out_of_stock" | "expired" | "expiring_soon" | "low_stock" | "healthy"
 
 /**
  * 物品状态对象

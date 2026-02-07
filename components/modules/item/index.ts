@@ -5,7 +5,6 @@ export type {
   ItemLifecycleStatus,
   ItemStatusState,
   UseItemReturn,
-  TrackerItemMock,
 } from "./types"
 
 // Utils

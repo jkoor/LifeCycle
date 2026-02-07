@@ -16,7 +16,7 @@ import {
 } from "lucide-react"
 import { motion } from "motion/react"
 
-import { signOut } from "next-auth/react"
+import { signOut } from "@/lib/auth-client"
 import { useUser } from "@/lib/client-auth"
 import { cn } from "@/lib/utils"
 import { Sidebar, SidebarBody } from "@/components/ui/sidebar"
@@ -271,7 +271,15 @@ export function AppSidebar({ categories = [] }: AppSidebarProps) {
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ duration: 0.2, ease: "easeInOut" }}
                   className="flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors overflow-hidden"
-                  onClick={() => signOut()}
+                  onClick={async () => {
+                    await signOut({
+                      fetchOptions: {
+                        onSuccess: () => {
+                          window.location.href = "/login"
+                        },
+                      },
+                    })
+                  }}
                 >
                   <LogOut className="h-5 w-5 shrink-0" />
                 </motion.button>

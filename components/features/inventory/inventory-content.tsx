@@ -5,27 +5,15 @@ import { PageContainer } from "@/components/common"
 import { InventoryToolbar } from "@/components/features/inventory/inventory-toolbar"
 import { InventoryContainer } from "@/components/features/inventory/inventory-container"
 import { Category } from "@prisma/client"
-
-interface FormattedItem {
-  id: string
-  name: string
-  quantity: number
-  price: number
-  expirationDate: Date | null
-  isPinned: boolean
-  isArchived: boolean
-  category: Category | null
-  tags: { id: string; name: string }[]
-  createdAt: Date
-  updatedAt: Date
-}
+import { InventoryItem } from "@/components/modules/item/types"
+import { SortByOption, SortDirOption } from "@/app/inventory/search-params"
 
 interface InventoryContentProps {
-  items: FormattedItem[]
+  items: InventoryItem[]
   categories: Category[]
   searchQuery: string
-  sortBy: string
-  sortDir: string
+  sortBy: SortByOption
+  sortDir: SortDirOption
   isArchived: boolean
 }
 

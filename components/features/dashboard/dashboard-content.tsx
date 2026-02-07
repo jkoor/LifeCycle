@@ -3,26 +3,12 @@
 import { PageContainer } from "@/components/common"
 import { StatsCards } from "@/components/features/dashboard/stats-cards"
 import { TrackedItems } from "@/components/features/dashboard/tracked-items"
-
-interface DashboardStats {
-  totalItems: number
-  lowStock: number
-  expiringSoon: number
-  urgentRestock: number
-}
-
-interface DashboardItem {
-  id: string
-  name: string
-  quantity: number
-  expirationDate: Date | null
-  isPinned: boolean
-  category: { name: string; icon: string | null } | null
-}
+import type { DashboardStats } from "@/app/actions/dashboard"
+import type { InventoryItem } from "@/components/modules/item/types"
 
 interface DashboardContentProps {
   stats: DashboardStats
-  items: DashboardItem[]
+  items: InventoryItem[]
 }
 
 export function DashboardContent({ stats, items }: DashboardContentProps) {

@@ -1,13 +1,16 @@
 "use server"
 
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { itemFormSchema, ItemFormValues } from "@/lib/schemas/item-schema"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
 export async function createItem(data: ItemFormValues) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }
@@ -49,7 +52,9 @@ export async function createItem(data: ItemFormValues) {
 }
 
 export async function updateItem(id: string, data: ItemFormValues) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }
@@ -88,7 +93,9 @@ export async function updateItem(id: string, data: ItemFormValues) {
 }
 
 export async function deleteItem(id: string) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }
@@ -109,7 +116,9 @@ export async function restoreItem(data: ItemFormValues) {
 }
 
 export async function updateStock(id: string, delta: number) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }
@@ -142,7 +151,9 @@ export async function updateStock(id: string, delta: number) {
 }
 
 export async function toggleNotification(id: string, enabled: boolean) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }
@@ -180,7 +191,9 @@ export async function toggleNotification(id: string, enabled: boolean) {
 }
 
 export async function replaceItem(id: string) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }
@@ -261,9 +274,11 @@ export async function undoReplaceItem(
   id: string,
   previousStock: number,
   previousDate: string | null,
-  usageLogId?: string // <--- 新参数：快照日志 ID
+  usageLogId?: string, // <--- 新参数：快照日志 ID
 ) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }
@@ -286,7 +301,7 @@ export async function undoReplaceItem(
       operations.push(
         prisma.usageLog.delete({
           where: { id: usageLogId },
-        }) as any // Type assertion needed for transaction array
+        }) as any, // Type assertion needed for transaction array
       )
     }
 
@@ -300,7 +315,9 @@ export async function undoReplaceItem(
 }
 
 export async function toggleArchive(id: string, isArchived: boolean) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }
@@ -318,7 +335,9 @@ export async function toggleArchive(id: string, isArchived: boolean) {
 }
 
 export async function togglePin(id: string, isPinned: boolean) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }

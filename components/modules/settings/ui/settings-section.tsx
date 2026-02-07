@@ -79,7 +79,7 @@ export function SettingsCard({ children, className }: SettingsCardProps) {
 interface SettingsRowProps {
   label: string
   description?: string
-  children: React.ReactNode
+  children?: React.ReactNode
   className?: string
   onClick?: () => void
   showArrow?: boolean

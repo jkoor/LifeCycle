@@ -1,13 +1,16 @@
-import { getServerSession } from "@/lib/auth"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { getDashboardStats, getPinnedItems } from "@/app/actions/dashboard"
 import { DashboardContent } from "@/components/features/dashboard/dashboard-content"
 
 export default async function DashboardPage() {
-  const session = await getServerSession()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
 
   if (!session) {
-    redirect("/auth/login")
+    redirect("/login")
   }
 
   // Fetch dashboard data

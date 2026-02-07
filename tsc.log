@@ -1,0 +1,54 @@
+.next/dev/types/validator.ts(116,39): error TS2307: Cannot find module '../../../app/api/auth/[...nextauth]/route.js' or its corresponding type declarations.
+.next/dev/types/validator.ts(125,39): error TS2307: Cannot find module '../../../app/api/auth/register/route.js' or its corresponding type declarations.
+app/actions/dashboard.ts(77,41): error TS2367: This comparison appears to be unintentional because the types '"expired" | "expiring_soon" | "healthy"' and '"out_of_stock"' have no overlap.
+app/actions/dashboard.ts(146,25): error TS2349: This expression is not callable.
+  Type 'Auth<{ database: (options: BetterAuthOptions) => DBAdapter<BetterAuthOptions>; emailAndPassword: { enabled: true; }; plugins: [{ id: "next-cookies"; hooks: { ...; }; }]; }>' has no call signatures.
+app/actions/item.ts(55,25): error TS2349: This expression is not callable.
+  Type 'Auth<{ database: (options: BetterAuthOptions) => DBAdapter<BetterAuthOptions>; emailAndPassword: { enabled: true; }; plugins: [{ id: "next-cookies"; hooks: { ...; }; }]; }>' has no call signatures.
+app/actions/item.ts(94,25): error TS2349: This expression is not callable.
+  Type 'Auth<{ database: (options: BetterAuthOptions) => DBAdapter<BetterAuthOptions>; emailAndPassword: { enabled: true; }; plugins: [{ id: "next-cookies"; hooks: { ...; }; }]; }>' has no call signatures.
+app/actions/item.ts(115,25): error TS2349: This expression is not callable.
+  Type 'Auth<{ database: (options: BetterAuthOptions) => DBAdapter<BetterAuthOptions>; emailAndPassword: { enabled: true; }; plugins: [{ id: "next-cookies"; hooks: { ...; }; }]; }>' has no call signatures.
+app/actions/item.ts(148,25): error TS2349: This expression is not callable.
+  Type 'Auth<{ database: (options: BetterAuthOptions) => DBAdapter<BetterAuthOptions>; emailAndPassword: { enabled: true; }; plugins: [{ id: "next-cookies"; hooks: { ...; }; }]; }>' has no call signatures.
+app/actions/item.ts(186,25): error TS2349: This expression is not callable.
+  Type 'Auth<{ database: (options: BetterAuthOptions) => DBAdapter<BetterAuthOptions>; emailAndPassword: { enabled: true; }; plugins: [{ id: "next-cookies"; hooks: { ...; }; }]; }>' has no call signatures.
+app/actions/item.ts(269,25): error TS2349: This expression is not callable.
+  Type 'Auth<{ database: (options: BetterAuthOptions) => DBAdapter<BetterAuthOptions>; emailAndPassword: { enabled: true; }; plugins: [{ id: "next-cookies"; hooks: { ...; }; }]; }>' has no call signatures.
+app/actions/item.ts(306,25): error TS2349: This expression is not callable.
+  Type 'Auth<{ database: (options: BetterAuthOptions) => DBAdapter<BetterAuthOptions>; emailAndPassword: { enabled: true; }; plugins: [{ id: "next-cookies"; hooks: { ...; }; }]; }>' has no call signatures.
+app/actions/item.ts(324,25): error TS2349: This expression is not callable.
+  Type 'Auth<{ database: (options: BetterAuthOptions) => DBAdapter<BetterAuthOptions>; emailAndPassword: { enabled: true; }; plugins: [{ id: "next-cookies"; hooks: { ...; }; }]; }>' has no call signatures.
+app/dashboard/page.tsx(1,10): error TS2305: Module '"@/lib/auth"' has no exported member 'getServerSession'.
+app/dashboard/page.tsx(39,23): error TS2741: Property 'urgentRestock' is missing in type 'import("D:/Code/lifecycle/app/actions/dashboard").DashboardStats' but required in type 'DashboardStats'.
+app/inventory/page.tsx(2,10): error TS2300: Duplicate identifier 'auth'.
+app/inventory/page.tsx(2,22): error TS2307: Cannot find module '@/auth' or its corresponding type declarations.
+app/inventory/page.tsx(12,10): error TS2300: Duplicate identifier 'auth'.
+components/examples/session-examples.tsx(8,5): error TS2305: Module '"@/lib/auth"' has no exported member 'getServerSession'.
+components/examples/session-examples.tsx(9,5): error TS2305: Module '"@/lib/auth"' has no exported member 'getCurrentUser'.
+components/examples/session-examples.tsx(10,5): error TS2305: Module '"@/lib/auth"' has no exported member 'getCurrentUserId'.
+components/examples/session-examples.tsx(11,5): error TS2305: Module '"@/lib/auth"' has no exported member 'isAuthenticated'.
+components/examples/session-examples.tsx(76,36): error TS7006: Parameter 'n' implicitly has an 'any' type.
+components/features/dashboard/dashboard-content.tsx(34,23): error TS2739: Type 'DashboardStats' is missing the following properties from type 'DashboardStats': notificationsEnabled, totalValue
+components/features/dashboard/dashboard-content.tsx(45,25): error TS2322: Type 'DashboardItem[]' is not assignable to type 'InventoryItem[]'.
+  Type 'DashboardItem' is not assignable to type 'InventoryItem'.
+    Type 'DashboardItem' is missing the following properties from type 'Omit<{ category: { name: string; id: string; createdAt: Date; updatedAt: Date; userId: string; icon: string | null; color: string | null; }; tags: { name: string; id: string; createdAt: Date; userId: string; }[]; } & { ...; }, "price">': image, createdAt, updatedAt, userId, and 12 more.
+components/features/inventory/inventory-content.tsx(60,13): error TS2322: Type 'FormattedItem[]' is not assignable to type 'InventoryItem[]'.
+  Type 'FormattedItem' is not assignable to type 'InventoryItem'.
+    Type 'FormattedItem' is missing the following properties from type 'Omit<{ category: { name: string; id: string; createdAt: Date; updatedAt: Date; userId: string; icon: string | null; color: string | null; }; tags: { name: string; id: string; createdAt: Date; userId: string; }[]; } & { ...; }, "price">': image, userId, brand, note, and 8 more.
+components/features/inventory/inventory-content.tsx(63,13): error TS2322: Type 'string' is not assignable to type '"name" | "price" | "stock" | "remainingDays" | "lastReplaced" | undefined'.
+components/features/inventory/inventory-content.tsx(64,13): error TS2322: Type 'string' is not assignable to type '"desc" | "asc" | undefined'.
+components/features/me/modules/account-settings.tsx(4,22): error TS2307: Cannot find module 'next-auth' or its corresponding type declarations.
+components/features/me/modules/account-settings.tsx(60,15): error TS7006: Parameter 'n' implicitly has an 'any' type.
+components/features/me/modules/general-settings.tsx(92,14): error TS2741: Property 'children' is missing in type '{ label: string; description: string; showArrow: true; onClick: () => void; }' but required in type 'SettingsRowProps'.
+components/features/me/modules/general-settings.tsx(119,14): error TS2741: Property 'children' is missing in type '{ label: string; showArrow: true; onClick: () => void; }' but required in type 'SettingsRowProps'.
+components/features/me/modules/general-settings.tsx(121,14): error TS2741: Property 'children' is missing in type '{ label: string; showArrow: true; onClick: () => void; }' but required in type 'SettingsRowProps'.
+components/features/me/modules/general-settings.tsx(123,14): error TS2741: Property 'children' is missing in type '{ label: string; showArrow: true; onClick: () => void; }' but required in type 'SettingsRowProps'.
+components/features/me/settings-page.tsx(3,22): error TS2307: Cannot find module 'next-auth' or its corresponding type declarations.
+components/modules/item/index.ts(8,3): error TS2305: Module '"./types"' has no exported member 'TrackerItemMock'.
+components/modules/item/ui/item-card.tsx(126,16): error TS2367: This comparison appears to be unintentional because the types 'ItemLifecycleStatus' and '"out_of_stock"' have no overlap.
+components/modules/item/ui/item-remaining-days.tsx(33,7): error TS2367: This comparison appears to be unintentional because the types 'ItemLifecycleStatus' and '"out_of_stock"' have no overlap.
+components/modules/item/utils.ts(79,7): error TS2322: Type '"out_of_stock"' is not assignable to type 'ItemLifecycleStatus'.
+components/modules/settings/types.ts(1,22): error TS2307: Cannot find module 'next-auth' or its corresponding type declarations.
+components/modules/user/profile-card.tsx(1,22): error TS2307: Cannot find module 'next-auth' or its corresponding type declarations.
+components/modules/user/profile-card.tsx(15,15): error TS7006: Parameter 'n' implicitly has an 'any' type.

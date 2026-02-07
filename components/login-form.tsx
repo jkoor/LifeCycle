@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { loginSchema, type LoginInput } from "@/lib/validations/auth"
-import { loginUser } from "@/lib/actions/auth"
+import { signIn } from "@/lib/auth-client"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
@@ -51,16 +51,25 @@ export function LoginForm({
     setError("")
 
     startTransition(async () => {
-      const result = await loginUser(values)
-
-      if (result.success) {
-        toast.success(result.message)
-        router.push("/dashboard")
-        router.refresh()
-      } else {
-        setError(result.message)
-        toast.error(result.message)
-      }
+      await signIn.email({
+        email: values.email,
+        password: values.password,
+        fetchOptions: {
+          onResponse: () => {
+            // isPending handles loading state via useTransition, but here we await.
+            // actually better-auth handles this.
+          },
+          onSuccess: () => {
+            toast.success("登录成功")
+            router.push("/dashboard")
+            router.refresh()
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message)
+            toast.error(ctx.error.message)
+          },
+        },
+      })
     })
   }
 

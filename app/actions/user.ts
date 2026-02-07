@@ -1,6 +1,7 @@
 "use server"
 
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
@@ -17,7 +18,9 @@ const updateAvatarSchema = z.object({
  * 更新用户昵称
  */
 export async function updateUserName(data: { name: string }) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }
@@ -45,7 +48,9 @@ export async function updateUserName(data: { name: string }) {
  * 更新用户头像
  */
 export async function updateUserAvatar(data: { image: string }) {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }

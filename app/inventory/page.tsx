@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation"
-import { auth } from "@/auth"
 import { prisma } from "@/lib/prisma"
 import { InventoryContent } from "@/components/features/inventory/inventory-content"
 import { searchParamsCache } from "./search-params"
@@ -9,10 +8,15 @@ type PageProps = {
   searchParams: Promise<SearchParams>
 }
 
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
+
 export default async function InventoryPage({ searchParams }: PageProps) {
   const { q, sortBy, sortDir, isArchived } =
     await searchParamsCache.parse(searchParams)
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
 
   if (!session?.user?.id) {
     redirect("/login")

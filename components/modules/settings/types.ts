@@ -1,4 +1,4 @@
-import { User } from "next-auth"
+import { User } from "better-auth"
 
 /**
  * 设置模块标识符

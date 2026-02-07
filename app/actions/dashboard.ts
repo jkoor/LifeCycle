@@ -1,6 +1,7 @@
 "use server"
 
-import { auth } from "@/auth"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { getItemStatus } from "@/components/modules/item/utils"
 import type { InventoryItem } from "@/components/modules/item/types"
@@ -34,7 +35,9 @@ export interface DashboardStats {
 export async function getDashboardStats(): Promise<
   DashboardStats | { error: string }
 > {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }
@@ -140,7 +143,9 @@ export async function getDashboardStats(): Promise<
  * - Belongs to current user
  */
 export async function getPinnedItems() {
-  const session = await auth()
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
   if (!session?.user?.id) {
     return { error: "Unauthorized" }
   }

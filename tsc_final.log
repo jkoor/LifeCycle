@@ -1,0 +1,14 @@
+app/actions/dashboard.ts(146,25): error TS2349: This expression is not callable.
+  Type 'Auth<{ database: (options: BetterAuthOptions) => DBAdapter<BetterAuthOptions>; emailAndPassword: { enabled: true; }; plugins: [{ id: "next-cookies"; hooks: { ...; }; }]; }>' has no call signatures.
+app/dashboard/page.tsx(42,23): error TS2741: Property 'urgentRestock' is missing in type 'import("D:/Code/lifecycle/app/actions/dashboard").DashboardStats' but required in type 'DashboardStats'.
+components/features/dashboard/dashboard-content.tsx(34,23): error TS2739: Type 'DashboardStats' is missing the following properties from type 'DashboardStats': notificationsEnabled, totalValue
+components/features/dashboard/dashboard-content.tsx(45,25): error TS2322: Type 'DashboardItem[]' is not assignable to type 'InventoryItem[]'.
+  Type 'DashboardItem' is not assignable to type 'InventoryItem'.
+    Type 'DashboardItem' is missing the following properties from type 'Omit<{ tags: { id: string; name: string; createdAt: Date; userId: string; }[]; category: { id: string; name: string; createdAt: Date; updatedAt: Date; userId: string; icon: string | null; color: string | null; }; } & { ...; }, "price">': categoryId, brand, image, note, and 12 more.
+components/features/inventory/inventory-content.tsx(60,13): error TS2322: Type 'FormattedItem[]' is not assignable to type 'InventoryItem[]'.
+  Type 'FormattedItem' is not assignable to type 'InventoryItem'.
+    Type 'FormattedItem' is missing the following properties from type 'Omit<{ tags: { id: string; name: string; createdAt: Date; userId: string; }[]; category: { id: string; name: string; createdAt: Date; updatedAt: Date; userId: string; icon: string | null; color: string | null; }; } & { ...; }, "price">': categoryId, brand, image, note, and 8 more.
+components/features/inventory/inventory-content.tsx(63,13): error TS2322: Type 'string' is not assignable to type '"name" | "stock" | "price" | "remainingDays" | "lastReplaced" | undefined'.
+components/features/inventory/inventory-content.tsx(64,13): error TS2322: Type 'string' is not assignable to type '"desc" | "asc" | undefined'.
+components/modules/item/index.ts(8,3): error TS2305: Module '"./types"' has no exported member 'TrackerItemMock'.
+components/modules/settings/types.ts(1,22): error TS2307: Cannot find module 'next-auth' or its corresponding type declarations.

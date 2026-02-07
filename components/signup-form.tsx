@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth"
-import { registerUser } from "@/lib/actions/auth"
+import { signUp } from "@/lib/auth-client"
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
@@ -53,16 +53,22 @@ export function SignupForm({
     setError("")
 
     startTransition(async () => {
-      const result = await registerUser(values)
-
-      if (result.success) {
-        toast.success(result.message)
-        // 注册成功后跳转到登录页面
-        router.push("/login")
-      } else {
-        setError(result.message)
-        toast.error(result.message)
-      }
+      await signUp.email({
+        email: values.email,
+        password: values.password,
+        name: values.name,
+        callbackURL: "/dashboard",
+        fetchOptions: {
+          onSuccess: () => {
+            toast.success("注册成功")
+            router.push("/dashboard")
+          },
+          onError: (ctx) => {
+            setError(ctx.error.message)
+            toast.error(ctx.error.message)
+          },
+        },
+      })
     })
   }
 
