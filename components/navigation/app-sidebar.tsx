@@ -3,11 +3,25 @@
 import React, { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Box, Compass, User, Plus, Leaf, Pin, PinOff } from "lucide-react"
+import {
+  Home,
+  Box,
+  Compass,
+  User,
+  Plus,
+  Leaf,
+  Pin,
+  PinOff,
+  LogOut,
+} from "lucide-react"
 import { motion } from "motion/react"
 
+import { signOut } from "next-auth/react"
+import { useUser } from "@/lib/client-auth"
 import { cn } from "@/lib/utils"
 import { Sidebar, SidebarBody } from "@/components/ui/sidebar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+
 import { AddItemModal } from "@/components/modules/item/ui"
 import { Category } from "@prisma/client"
 
@@ -22,6 +36,7 @@ export function AppSidebar({ categories = [] }: AppSidebarProps) {
   const pathname = usePathname()
   const [hovered, setHovered] = useState(false)
   const [pinState, setPinState] = useState<PinState>(null)
+  const user = useUser()
 
   // Check if path is active
   const isPathActive = (href: string) => {
@@ -217,28 +232,52 @@ export function AppSidebar({ categories = [] }: AppSidebarProps) {
           </button>
 
           {/* User Section */}
-          <Link
-            href="/me"
+          <div
             className={cn(
-              "flex items-center py-2.5 rounded-xl transition-colors",
-              isOpen ? "px-3 gap-3" : "justify-center",
-              "hover:bg-neutral-200 dark:hover:bg-neutral-700",
+              "flex items-center w-full py-2.5 rounded-xl transition-all duration-200",
+              isOpen ? "px-3 gap-3 justify-start" : "justify-center px-0",
             )}
           >
-            <div className="h-7 w-7 shrink-0 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center">
-              <User className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <motion.span
-              animate={{
-                width: isOpen ? "auto" : 0,
-                opacity: isOpen ? 1 : 0,
-              }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
-              className="text-neutral-700 dark:text-neutral-200 text-sm whitespace-nowrap overflow-hidden"
-            >
-              个人中心
-            </motion.span>
-          </Link>
+            <Avatar className="h-7 w-7 shrink-0 rounded-lg border border-neutral-200 dark:border-neutral-800">
+              <AvatarImage
+                src={user?.image || "https://github.com/shadcn.png"}
+                alt={user?.name || "User"}
+              />
+              <AvatarFallback className="rounded-lg">
+                {user?.name?.[0] || "U"}
+              </AvatarFallback>
+            </Avatar>
+
+            {isOpen && (
+              <>
+                <motion.div
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "auto", opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="flex flex-1 flex-col items-start overflow-hidden whitespace-nowrap"
+                >
+                  <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate w-full text-left">
+                    {user?.name || "User"}
+                  </span>
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400 truncate w-full text-left">
+                    {user?.email || "user@example.com"}
+                  </span>
+                </motion.div>
+
+                <motion.button
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: "auto", opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 transition-colors overflow-hidden"
+                  onClick={() => signOut()}
+                >
+                  <LogOut className="h-5 w-5 shrink-0" />
+                </motion.button>
+              </>
+            )}
+          </div>
         </div>
       </SidebarBody>
     </Sidebar>

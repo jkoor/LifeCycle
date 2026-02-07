@@ -3,15 +3,15 @@ import { NextResponse } from "next/server"
 
 /**
  * NextAuth.js 中间件 (Next.js 16+ 使用 proxy.ts)
- * 
+ *
  * 路由保护策略:
  * 1. /dashboard/* - 需要认证
  * 2. /api/* (除了 /api/auth/*) - 需要认证
- * 3. /auth/* - 已登录用户自动重定向到 dashboard
+ * 3. /login, /register - 已登录用户自动重定向到 dashboard
  * 4. / - 根路径，已登录用户重定向到 dashboard
- * 
+ *
  * 重定向规则:
- * - 未登录访问受保护页面 → /auth/login (带 callbackUrl)
+ * - 未登录访问受保护页面 → /login (带 callbackUrl)
  * - 已登录访问认证页面 → /dashboard
  * - 已登录访问根路径 → /dashboard
  */
@@ -21,8 +21,9 @@ export default auth((req) => {
 
   // 定义路由类型
   const isProtectedRoute = pathname.startsWith("/dashboard")
-  const isApiRoute = pathname.startsWith("/api") && !pathname.startsWith("/api/auth")
-  const isAuthPage = pathname.startsWith("/auth")
+  const isApiRoute =
+    pathname.startsWith("/api") && !pathname.startsWith("/api/auth")
+  const isAuthPage = pathname === "/login" || pathname === "/register"
   const isRootPath = pathname === "/"
 
   // 场景 1: 未登录用户访问受保护的路由
@@ -31,12 +32,12 @@ export default auth((req) => {
     if (isApiRoute) {
       return NextResponse.json(
         { error: "Unauthorized", message: "请先登录" },
-        { status: 401 }
+        { status: 401 },
       )
     }
 
     // 页面路由重定向到登录页，并保存原始 URL
-    const loginUrl = new URL("/auth/login", req.url)
+    const loginUrl = new URL("/login", req.url)
     loginUrl.searchParams.set("callbackUrl", pathname)
     return NextResponse.redirect(loginUrl)
   }
@@ -75,4 +76,3 @@ export const config = {
     "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 }
-

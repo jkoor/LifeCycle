@@ -125,5 +125,5 @@ export async function loginUser(values: LoginInput) {
  * 用户登出 Server Action
  */
 export async function logoutUser() {
-  await signOut({ redirectTo: "/auth/login" })
+  await signOut({ redirectTo: "/login" })
 }

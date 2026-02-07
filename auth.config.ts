@@ -25,8 +25,8 @@ export const authConfig: NextAuthConfig = {
   // 自定义页面路径
   pages: {
     signIn: "/login",
-    signOut: "/auth/logout",
-    error: "/auth/error",
+    signOut: "/login",
+    error: "/login",
     newUser: "/dashboard", // 新用户注册后跳转
   },
 
