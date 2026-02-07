@@ -258,3 +258,27 @@ model WebhookConfig {
 
   @@index([userId])
 }
+// ==========================================
+// 📋 通知日志 (Notification Log)
+// 防止重复通知，记录发送历史
+// ==========================================
+
+model NotificationLog {
+  id          String   @id @default(cuid())
+  
+  itemId      String   // 关联的物品 ID
+  userId      String   // 关联的用户 ID
+  webhookId   String   // 使用的 Webhook 配置 ID
+  
+  type        String   // 通知类型: "expiry" | "lifespan"
+  expiryDate  String   // 到期日期 (ISO string)，用于去重
+  
+  success     Boolean  @default(true)  // 是否发送成功
+  errorMsg    String?  // 失败时的错误信息
+  
+  sentAt      DateTime @default(now()) // 发送时间
+
+  @@unique([itemId, webhookId, expiryDate]) // 同一物品+同一webhook+同一到期日 只通知一次
+  @@index([userId])
+  @@index([sentAt])
+}

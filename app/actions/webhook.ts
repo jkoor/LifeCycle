@@ -5,6 +5,7 @@ import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { sendWebhook } from "@/lib/services/webhook-sender"
 
 // ==========================================
 // Schema 校验
@@ -189,30 +190,27 @@ export async function testWebhookConfig(id: string) {
       return { error: "配置不存在" }
     }
 
-    // 构造测试数据
-    const title = config.titleTemplate
-      .replace("{{itemName}}", "测试物品")
-      .replace("{{expiryDate}}", "2026-02-14")
-      .replace("{{daysLeft}}", "7")
+    // 使用 webhook-sender 服务发送测试通知
+    const result = await sendWebhook(
+      {
+        id: config.id,
+        url: config.url,
+        enabled: true,
+        titleTemplate: config.titleTemplate,
+        contentTemplate: config.contentTemplate,
+        titleKey: config.titleKey,
+        contentKey: config.contentKey,
+      },
+      {
+        itemName: "测试物品",
+        expiryDate: "2026-02-14",
+        daysLeft: "7",
+        categoryName: "日用品",
+      },
+    )
 
-    const content = config.contentTemplate
-      .replace("{{itemName}}", "测试物品")
-      .replace("{{expiryDate}}", "2026-02-14")
-      .replace("{{daysLeft}}", "7")
-      .replace("{{categoryName}}", "日用品")
-
-    const payload: Record<string, string> = {}
-    payload[config.titleKey ?? "title"] = title
-    payload[config.contentKey ?? "content"] = content
-
-    const response = await fetch(config.url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    })
-
-    if (!response.ok) {
-      return { error: `Webhook 请求失败: HTTP ${response.status}` }
+    if (!result.success) {
+      return { error: `Webhook 请求失败: ${result.error}` }
     }
 
     return { success: true }

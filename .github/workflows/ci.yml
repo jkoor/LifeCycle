@@ -1,0 +1,55 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+        env:
+          DATABASE_URL: "file:./ci.db"
+          BETTER_AUTH_SECRET: "ci-secret-for-build-only-not-real"
+          BETTER_AUTH_URL: "http://localhost:3000"
+
+  # ---- 如果部署到 VPS（Docker），取消以下注释 ----
+  # deploy:
+  #   needs: lint-and-build
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Build and push Docker image
+  #       uses: docker/build-push-action@v5
+  #       with:
+  #         context: .
+  #         push: true
+  #         tags: ghcr.io/${{ github.repository }}:latest
+  #         build-args: |
+  #           DATABASE_URL=${{ secrets.DATABASE_URL }}
+  #           BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
+  #           BETTER_AUTH_URL=${{ secrets.BETTER_AUTH_URL }}
+  #           NEXT_PUBLIC_APP_URL=${{ secrets.NEXT_PUBLIC_APP_URL }}
