@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { getDashboardStats, getPinnedItems } from "@/app/actions/dashboard"
 import { StatsCards } from "@/components/features/dashboard/stats-cards"
 import { TrackedItems } from "@/components/features/dashboard/tracked-items"
-import { Logo } from "@/components/common/logo"
+import { Home } from 'lucide-react';
 
 export default async function DashboardPage() {
   const session = await getServerSession()
@@ -41,12 +41,14 @@ export default async function DashboardPage() {
     <div className="container mx-auto p-4 md:p-8 space-y-8">
       {/* Page Header */}
       <div>
-        <div className="flex items-center gap-3">
-          <Logo />
+        <div className="mb-8">
+            <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
+                首页
+            </h1>
+            <p className="text-muted-foreground">
+                快速查看库存状态和追踪重要物品
+            </p>
         </div>
-        <p className="text-muted-foreground mt-1 ml-1">
-          快速查看库存状态和追踪重要物品
-        </p>
       </div>
 
       {/* Statistics Cards Section */}

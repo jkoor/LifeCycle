@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { DockNav } from "@/components/navigation"
+import { DockNav, AppSidebar } from "@/components/navigation"
 import { Category } from "@prisma/client"
 
 interface NavigationWrapperProps {
@@ -11,6 +11,7 @@ interface NavigationWrapperProps {
 /**
  * 导航包装组件
  * 根据当前路由决定是否显示导航栏
+ * 桌面端显示侧边栏，移动端显示底部 Dock
  */
 export function NavigationWrapper({ categories = [] }: NavigationWrapperProps) {
   const pathname = usePathname()
@@ -25,5 +26,16 @@ export function NavigationWrapper({ categories = [] }: NavigationWrapperProps) {
     return null
   }
 
-  return <DockNav categories={categories} />
+  return (
+    <>
+      {/* Desktop: Sidebar */}
+      <div className="hidden md:block">
+        <AppSidebar categories={categories} />
+      </div>
+      {/* Mobile: Dock bar */}
+      <div className="md:hidden">
+        <DockNav categories={categories} />
+      </div>
+    </>
+  )
 }

@@ -52,10 +52,15 @@ export default async function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <NavigationWrapper categories={categories} />
-              <AnimatedThemeToggler className="fixed top-4 right-4 z-50 text-foreground" />
-              {/* 主内容区：移动端添加底部 padding 避免被悬浮导航遮挡 */}
-              <main className="pb-20 md:pb-0">{children}</main>
+              {/* Desktop: 整体容器带圆角和阴影 */}
+              <div className="flex min-h-screen md:p-3 md:gap-3 bg-neutral-100 dark:bg-neutral-900">
+                <NavigationWrapper categories={categories} />
+                <AnimatedThemeToggler className="fixed top-4 right-4 md:top-6 md:right-6 z-50 text-foreground" />
+                {/* 主内容区：移动端添加底部 padding，桌面端添加圆角 */}
+                <main className="flex-1 pb-20 md:pb-0 bg-background md:rounded-2xl md:shadow-sm md:border md:border-border/50 md:overflow-hidden">
+                  {children}
+                </main>
+              </div>
             </ThemeProvider>
           </SessionProvider>
           <Toaster />
