@@ -9,11 +9,11 @@ import {
   Compass,
   User,
   Plus,
-  Leaf,
   Pin,
   PinOff,
   LogOut,
 } from "lucide-react"
+import Image from "next/image"
 import { motion } from "motion/react"
 
 import { signOut } from "@/lib/auth-client"
@@ -93,7 +93,7 @@ export function AppSidebar({ categories = [] }: AppSidebarProps) {
   }
 
   return (
-    <Sidebar open={isOpen} setOpen={() => {}}>
+    <Sidebar open={isOpen} setOpen={() => { }}>
       <SidebarBody
         className="justify-between gap-6"
         onMouseEnter={handleMouseEnter}
@@ -108,9 +108,14 @@ export function AppSidebar({ categories = [] }: AppSidebarProps) {
               isOpen ? "px-3 gap-3" : "justify-center",
             )}
           >
-            <div className="h-7 w-7 shrink-0 rounded-lg bg-primary flex items-center justify-center">
-              <Leaf className="h-4 w-4 text-primary-foreground" />
-            </div>
+            <Image
+              src="/logo.svg"
+              alt="LifeCycle"
+              width={28}
+              height={28}
+              className="h-7 w-7 shrink-0"
+              priority
+            />
             <motion.span
               animate={{
                 width: isOpen ? "auto" : 0,

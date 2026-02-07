@@ -1,16 +1,21 @@
-import { Package } from "lucide-react"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 
-interface LogoProps extends React.SVGProps<SVGSVGElement> {
+interface LogoProps {
   className?: string
 }
 
-export function Logo({ className, ...props }: LogoProps) {
+export function Logo({ className }: LogoProps) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 ring-4 ring-primary/10">
-        <Package className="h-6 w-6" {...props} />
-      </div>
+      <Image
+        src="/logo.svg"
+        alt="LifeCycle"
+        width={40}
+        height={40}
+        className="h-10 w-10 shrink-0"
+        priority
+      />
       <span className="text-xl font-bold tracking-tight text-foreground/90">
         LifeCycle
       </span>
@@ -18,15 +23,15 @@ export function Logo({ className, ...props }: LogoProps) {
   )
 }
 
-export function LogoIcon({ className, ...props }: LogoProps) {
+export function LogoIcon({ className }: LogoProps) {
   return (
-    <div
-      className={cn(
-        "flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 ring-4 ring-primary/10",
-        className,
-      )}
-    >
-      <Package className="h-6 w-6" {...props} />
-    </div>
+    <Image
+      src="/logo.svg"
+      alt="LifeCycle"
+      width={40}
+      height={40}
+      className={cn("h-10 w-10 shrink-0", className)}
+      priority
+    />
   )
 }

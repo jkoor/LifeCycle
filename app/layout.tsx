@@ -16,6 +16,13 @@ export const metadata: Metadata = {
   title: "LifeCycle - 智能生活管理平台",
   description: "数据驱动的生活方式管理工具",
   generator: "v0.app",
+  icons: {
+    icon: [
+      { url: "/logo.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    apple: "/apple-icon.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
