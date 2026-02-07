@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { SunMoon, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
 import { flushSync } from "react-dom"
@@ -31,13 +31,18 @@ export const AnimatedThemeToggler = ({
   ...props
 }: AnimatedThemeTogglerProps) => {
   const { theme, resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Get the icon based on current theme state
   const ThemeIcon =
     theme === "system"
       ? SunMoon // System mode shows monitor icon
-      : resolvedTheme === "dark"
+      : resolvedTheme === "light"
         ? Sun // Dark mode shows sun (click to switch to light)
         : Moon // Light mode shows moon (click to switch to dark)
 
@@ -84,6 +89,15 @@ export const AnimatedThemeToggler = ({
       },
     )
   }, [theme, setTheme, duration])
+
+  if (!mounted) {
+    return (
+      <button className={cn(className, "opacity-0")} {...props}>
+        <SunMoon className="size-5" />
+        <span className="sr-only">Toggle theme</span>
+      </button>
+    )
+  }
 
   return (
     <Tooltip>

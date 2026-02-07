@@ -1,5 +1,5 @@
-import { CoverExample } from "@/components/preview";
+import { redirect } from "next/navigation"
 
 export default function Page() {
-  return <CoverExample />
+  redirect("/dashboard")
 }
