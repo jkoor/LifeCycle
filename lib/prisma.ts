@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client"
+import { PrismaClient } from "@/generated/prisma/client"
 
 /**
  * Prisma Client 单例
@@ -10,6 +10,8 @@ import { PrismaClient } from "@prisma/client"
  * 通过环境变量 DATABASE_PROVIDER 控制：
  * - "sqlite" (默认)：使用本地 SQLite 文件
  * - "turso"：使用 Turso 远程数据库
+ *
+ * Prisma 7: 所有数据库都需要 driver adapter
  */
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -38,12 +40,15 @@ async function createPrismaClient(): Promise<PrismaClient> {
     }
 
     const adapter = new PrismaLibSQL({ url, authToken })
-
-    return new PrismaClient({ adapter } as ConstructorParameters<typeof PrismaClient>[0])
+    return new PrismaClient({ adapter })
   }
 
-  // 默认：本地 SQLite，使用 DATABASE_URL 环境变量
-  return new PrismaClient()
+  // 默认：本地 SQLite，使用 @prisma/adapter-better-sqlite3
+  const { PrismaBetterSqlite3 } = await import("@prisma/adapter-better-sqlite3")
+  const adapter = new PrismaBetterSqlite3({
+    url: process.env.DATABASE_URL || "file:./dev.db",
+  })
+  return new PrismaClient({ adapter })
 }
 
 const prismaPromise = globalForPrisma.prismaPromise ?? createPrismaClient()

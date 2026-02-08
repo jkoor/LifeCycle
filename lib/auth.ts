@@ -7,6 +7,13 @@ import { nextCookies } from "better-auth/next-js"
 
 export const auth = betterAuth({
   appName: "Lifecycle",
+  baseURL: `http://127.0.0.1:${process.env.PORT || 3000}`,
+  // 从请求的 Origin header 自动推断受信来源，无需手动配置域名
+  trustedOrigins: (request) => {
+    if (!request) return []
+    const origin = request.headers.get("origin")
+    return origin ? [origin] : []
+  },
   database: prismaAdapter(prisma, {
     provider: "sqlite",
   }),

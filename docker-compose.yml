@@ -1,23 +1,23 @@
 # ============================================
-# LifeCycle - Docker Compose (快速启动)
+# LifeCycle Docker Compose
 # ============================================
 # 使用方式:
-#   1. 复制 .env.example 为 .env
-#   2. 修改环境变量
-#   3. docker compose up -d
+#   1. 复制 .env.example 为 .env.production
+#   2. 修改 BETTER_AUTH_SECRET（必须）
+#   3. docker compose --env-file .env.production up -d
 #
-# 如需 Nginx + SSL，请参考 docker-compose.production.yml
+# 域名/地址无需配置，应用从请求自动检测
 # ============================================
 
 services:
   app:
-    image: ghcr.io/YOUR_OWNER/lifecycle:latest
-    # 如需本地构建，注释上面的 image 行，取消下面的 build 注释:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
-    #   args:
-    #     - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    # ---- 二选一：预构建镜像 或 本地构建 ----
+    # 方式 1: 拉取预构建镜像（推荐）
+    # image: ghcr.io/YOUR_OWNER/lifecycle:latest
+    # 方式 2: 本地源码构建（取消注释下方，注释上方 image 行）
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: lifecycle
     restart: unless-stopped
     ports:
@@ -26,13 +26,11 @@ services:
       # ---- 数据库 ----
       - DATABASE_PROVIDER=${DATABASE_PROVIDER:-sqlite}
       - DATABASE_URL=file:/app/data/lifecycle.db
-      # Turso (仅 DATABASE_PROVIDER=turso 时需要)
+      # Turso 远程数据库（仅 DATABASE_PROVIDER=turso 时需要）
       - TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-}
       - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN:-}
       # ---- 认证 ----
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
       # ---- 定时任务 ----
       - CRON_SECRET=${CRON_SECRET:-}
       - CRON_ENABLED=${CRON_ENABLED:-true}
@@ -40,6 +38,11 @@ services:
       - CRON_TIMEZONE=${CRON_TIMEZONE:-Asia/Shanghai}
     volumes:
       - lifecycle-data:/app/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   lifecycle-data:

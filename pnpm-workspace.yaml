@@ -1,5 +1,12 @@
 packages:
   - .
+
 ignoredBuiltDependencies:
+  - "@prisma/engines"
+  - msw
+  - prisma
   - sharp
   - unrs-resolver
+
+onlyBuiltDependencies:
+  - better-sqlite3

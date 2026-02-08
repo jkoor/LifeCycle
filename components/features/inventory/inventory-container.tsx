@@ -3,7 +3,7 @@
 import { InventoryItem } from "@/types/inventory"
 import { InventoryDesktopTable } from "./inventory-desktop-table"
 import { InventoryMobileGrid } from "./inventory-mobile-grid"
-import type { Category } from "@prisma/client"
+import type { Category } from "@/generated/prisma/client"
 import {
   Empty,
   EmptyHeader,

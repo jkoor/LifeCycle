@@ -6,15 +6,18 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    outputFileTracingIncludes: {
-      "*": ["prisma/migrations/**", "prisma/schema.prisma"],
-    },
+  outputFileTracingIncludes: {
+    "*": ["prisma/migrations/**", "prisma/schema.prisma", "generated/prisma/**"],
+  },
+  outputFileTracingExcludes: {
+    "*": [
+      // 排除不需要进入运行时的 typescript
+      "node_modules/typescript/**",
+    ],
   },
   images: {
     unoptimized: true,
   },
-  turbopack: {},
 }
 
 export default withPWA({

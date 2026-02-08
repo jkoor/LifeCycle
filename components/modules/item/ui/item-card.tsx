@@ -1,6 +1,6 @@
 "use client"
 
-import type { Category } from "@prisma/client"
+import type { Category } from "@/generated/prisma/client"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { zhCN } from "date-fns/locale"

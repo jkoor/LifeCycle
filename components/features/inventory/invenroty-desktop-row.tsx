@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { Category } from "@prisma/client"
+import type { Category } from "@/generated/prisma/client"
 import { format } from "date-fns"
 import { zhCN } from "date-fns/locale"
 

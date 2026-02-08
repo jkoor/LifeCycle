@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
-import type { Category } from "@prisma/client"
+import type { Category } from "@/generated/prisma/client"
 import { SortByOption, SortDirOption } from "@/app/inventory/search-params"
 
 import {

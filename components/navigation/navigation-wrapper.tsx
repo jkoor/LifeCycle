@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { DockNav, AppSidebar } from "@/components/navigation"
-import type { Category } from "@prisma/client"
+import type { Category } from "@/generated/prisma/client"
 
 interface NavigationWrapperProps {
   categories?: Category[]

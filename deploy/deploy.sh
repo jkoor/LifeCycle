@@ -5,146 +5,168 @@
 # 使用方式:
 #   chmod +x deploy/deploy.sh
 #   ./deploy/deploy.sh
+#
+# 功能:
+#   - 检查 Docker 环境
+#   - 自动生成环境变量文件（含安全密钥）
+#   - 构建镜像并启动服务
+#   - 健康检查验证
 # ============================================
 
 set -euo pipefail
 
-# 颜色
+# ---- 颜色 ----
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+CYAN='\033[0;36m'
+NC='\033[0m'
 
 log()   { echo -e "${GREEN}[✓]${NC} $1"; }
 warn()  { echo -e "${YELLOW}[!]${NC} $1"; }
 error() { echo -e "${RED}[✗]${NC} $1"; exit 1; }
+info()  { echo -e "${CYAN}[i]${NC} $1"; }
 
 # ============================================
 # 1. 前置检查
 # ============================================
+echo ""
 echo "============================================"
-echo "  LifeCycle 部署脚本"
+echo "  LifeCycle 一键部署"
 echo "============================================"
 echo ""
 
-command -v docker >/dev/null 2>&1 || error "Docker 未安装。请先安装 Docker: https://docs.docker.com/engine/install/"
-command -v docker compose >/dev/null 2>&1 || error "Docker Compose 未安装。"
+command -v docker >/dev/null 2>&1 || error "Docker 未安装。请先安装: https://docs.docker.com/engine/install/"
+docker compose version >/dev/null 2>&1 || error "Docker Compose 未安装或版本过旧。"
+log "Docker 环境检查通过"
 
 # ============================================
-# 2. 检查环境变量文件
+# 2. 环境变量
 # ============================================
 ENV_FILE=".env.production"
 
 if [ ! -f "$ENV_FILE" ]; then
-    warn "未找到 $ENV_FILE，正在从模板创建..."
-    
+    warn "未找到 $ENV_FILE，正在自动生成..."
+
     # 自动生成安全密钥
-    AUTH_SECRET=$(openssl rand -base64 32)
-    CRON_SECRET=$(openssl rand -hex 16)
-    
+    AUTH_SECRET=$(openssl rand -base64 32 2>/dev/null || head -c 32 /dev/urandom | base64)
+    CRON_SECRET=$(openssl rand -hex 16 2>/dev/null || head -c 16 /dev/urandom | xxd -p)
+
     cat > "$ENV_FILE" <<EOF
 # ============================================
 # LifeCycle 生产环境配置
-# 请修改以下值后再部署！
+# 由 deploy.sh 自动生成于 $(date '+%Y-%m-%d %H:%M:%S')
 # ============================================
 
-# 你的域名（必改）
-NEXT_PUBLIC_APP_URL=https://your-domain.com
-BETTER_AUTH_URL=https://your-domain.com
-
-# 认证密钥（已自动生成，保管好！）
+# 认证密钥（已自动生成，请妥善保管）
 BETTER_AUTH_SECRET=${AUTH_SECRET}
 
-# Cron 任务密钥（已自动生成）
-CRON_SECRET=${CRON_SECRET}
-
-# 应用端口（Nginx 代理到此端口）
+# 应用端口
 APP_PORT=3000
+
+# 数据库（默认 SQLite）
+DATABASE_PROVIDER=sqlite
+
+# 定时任务
+CRON_SECRET=${CRON_SECRET}
+CRON_ENABLED=true
+CRON_SCHEDULE="0 9 * * *"
+CRON_TIMEZONE=Asia/Shanghai
 EOF
 
-    warn "已创建 $ENV_FILE，请修改域名后重新运行此脚本！"
-    warn "文件位置: $(pwd)/$ENV_FILE"
-    exit 0
+    log "已生成 $ENV_FILE（密钥已自动填充）"
+    echo ""
+    info "查看配置: cat $ENV_FILE"
+    info "重新部署: ./deploy/deploy.sh"
+    echo ""
+
+    # 询问是否继续
+    read -p "是否使用默认配置直接部署？(y/N): " -r
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 0
+    fi
 fi
 
 # 加载环境变量
+set -a
 source "$ENV_FILE"
+set +a
 
-# 检查是否还是默认值
-if [[ "$NEXT_PUBLIC_APP_URL" == *"your-domain"* ]]; then
-    error "请先修改 $ENV_FILE 中的域名配置！"
+# 检查关键变量
+if [ -z "${BETTER_AUTH_SECRET:-}" ] || [ "$BETTER_AUTH_SECRET" = "请替换为随机密钥" ]; then
+    error "BETTER_AUTH_SECRET 未设置！请编辑 $ENV_FILE"
 fi
 
-log "环境变量检查通过"
+log "环境变量加载完成"
 
 # ============================================
-# 3. 替换 Nginx 配置中的域名
-# ============================================
-DOMAIN=$(echo "$NEXT_PUBLIC_APP_URL" | sed 's|https\?://||' | sed 's|/.*||')
-
-log "检测到域名: $DOMAIN"
-
-# 替换 Nginx 配置中的域名占位符
-sed -i "s/your-domain.com/$DOMAIN/g" deploy/nginx/conf.d/default.conf
-sed -i "s/your-domain.com/$DOMAIN/g" deploy/nginx/conf.d/ssl.conf.example
-
-log "Nginx 配置已更新"
-
-# ============================================
-# 4. 构建和启动
+# 3. 拉取/构建镜像
 # ============================================
 echo ""
-log "开始构建 Docker 镜像..."
-docker compose --env-file "$ENV_FILE" build --no-cache
 
-log "启动服务..."
+# 检查 docker-compose.yml 是否配置了 build（本地构建模式）
+if grep -q "^\s*build:" docker-compose.yml; then
+    info "检测到本地构建模式，开始构建 Docker 镜像..."
+    docker compose --env-file "$ENV_FILE" build
+    log "镜像构建完成"
+else
+    info "使用预构建镜像，拉取最新版本..."
+    docker compose --env-file "$ENV_FILE" pull
+    log "镜像拉取完成"
+fi
+
+# ============================================
+# 4. 启动服务
+# ============================================
+info "启动服务..."
+
 docker compose --env-file "$ENV_FILE" up -d
 
-echo ""
-log "等待应用启动..."
-sleep 10
+log "容器已启动"
 
-# 健康检查
-if docker compose ps | grep -q "healthy"; then
+# ============================================
+# 5. 健康检查
+# ============================================
+echo ""
+info "等待应用启动..."
+
+MAX_WAIT=60
+WAITED=0
+while [ $WAITED -lt $MAX_WAIT ]; do
+    if docker compose --env-file "$ENV_FILE" ps 2>/dev/null | grep -q "healthy"; then
+        break
+    fi
+    sleep 3
+    WAITED=$((WAITED + 3))
+    printf "."
+done
+echo ""
+
+if docker compose --env-file "$ENV_FILE" ps 2>/dev/null | grep -q "healthy"; then
     log "应用启动成功！"
 else
-    warn "应用正在启动中，请稍后检查: docker compose ps"
+    CONTAINER_STATUS=$(docker compose --env-file "$ENV_FILE" ps --format "table {{.Name}}\t{{.Status}}" 2>/dev/null || echo "未知")
+    warn "应用仍在启动中（健康检查有 40s 启动宽限期）"
+    echo "  当前状态: $CONTAINER_STATUS"
+    echo "  查看日志: docker compose --env-file $ENV_FILE logs -f app"
 fi
 
 # ============================================
-# 5. 数据库迁移
+# 6. 完成
 # ============================================
-log "执行数据库迁移..."
-docker compose exec app npx prisma db push --accept-data-loss 2>/dev/null || \
-    docker compose exec app npx prisma db push
+APP_URL="${NEXT_PUBLIC_APP_URL:-http://localhost:${APP_PORT:-3000}}"
 
-log "数据库迁移完成"
-
-# ============================================
-# 6. SSL 证书（可选）
-# ============================================
 echo ""
 echo "============================================"
-echo "  部署完成！"
+echo -e "  ${GREEN}部署完成！${NC}"
 echo "============================================"
 echo ""
-echo "  HTTP 访问: http://$DOMAIN"
+echo "  访问地址: $APP_URL"
 echo ""
-echo "  获取 SSL 证书:"
-echo "    docker compose run --rm certbot certonly \\"
-echo "      --webroot -w /var/www/certbot \\"
-echo "      -d $DOMAIN \\"
-echo "      --email your-email@example.com \\"
-echo "      --agree-tos --no-eff-email"
-echo ""
-echo "  启用 HTTPS:"
-echo "    cp deploy/nginx/conf.d/ssl.conf.example deploy/nginx/conf.d/default.conf"
-echo "    docker compose restart nginx"
-echo ""
-echo "  查看日志:"
-echo "    docker compose logs -f app"
-echo ""
-echo "  停止服务:"
-echo "    docker compose --env-file .env.production down"
+echo "  常用命令:"
+echo "    查看日志:   docker compose --env-file $ENV_FILE logs -f"
+echo "    重启服务:   docker compose --env-file $ENV_FILE restart"
+echo "    停止服务:   docker compose --env-file $ENV_FILE down"
+echo "    更新部署:   ./deploy/update.sh"
 echo ""
 echo "============================================"
