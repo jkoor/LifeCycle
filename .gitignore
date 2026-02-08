@@ -28,7 +28,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-dev.db
+# SQLite 数据库文件
+*.db
+*.db-journal
 
 # PWA generated files
 public/sw.js

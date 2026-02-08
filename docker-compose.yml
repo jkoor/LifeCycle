@@ -1,104 +1,46 @@
 # ============================================
-# LifeCycle 生产部署配置
+# LifeCycle - Docker Compose (快速启动)
 # ============================================
 # 使用方式:
-#   1. 复制 .env.example 为 .env.production
-#   2. 修改所有变量值
-#   3. docker compose --env-file .env.production up -d
+#   1. 复制 .env.example 为 .env
+#   2. 修改环境变量
+#   3. docker compose up -d
+#
+# 如需 Nginx + SSL，请参考 docker-compose.production.yml
 # ============================================
 
 services:
-  # ---- Next.js 应用 ----
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-    container_name: lifecycle-app
+    image: ghcr.io/YOUR_OWNER/lifecycle:latest
+    # 如需本地构建，注释上面的 image 行，取消下面的 build 注释:
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    #   args:
+    #     - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    container_name: lifecycle
     restart: unless-stopped
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
-      - DATABASE_PROVIDER=sqlite
+      # ---- 数据库 ----
+      - DATABASE_PROVIDER=${DATABASE_PROVIDER:-sqlite}
       - DATABASE_URL=file:/app/data/lifecycle.db
+      # Turso (仅 DATABASE_PROVIDER=turso 时需要)
+      - TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-}
+      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN:-}
+      # ---- 认证 ----
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-      - CRON_SECRET=${CRON_SECRET}
+      # ---- 定时任务 ----
+      - CRON_SECRET=${CRON_SECRET:-}
+      - CRON_ENABLED=${CRON_ENABLED:-true}
+      - CRON_SCHEDULE=${CRON_SCHEDULE:-0 9 * * *}
+      - CRON_TIMEZONE=${CRON_TIMEZONE:-Asia/Shanghai}
     volumes:
-      - app-data:/app/data
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--no-verbose",
-          "--tries=1",
-          "--spider",
-          "http://localhost:3000/api/auth/ok",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-    networks:
-      - lifecycle-net
-
-  # ---- Nginx 反向代理 + SSL ----
-  nginx:
-    image: nginx:alpine
-    container_name: lifecycle-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
-      - certbot-conf:/etc/letsencrypt:ro
-      - certbot-www:/var/www/certbot:ro
-    depends_on:
-      app:
-        condition: service_healthy
-    networks:
-      - lifecycle-net
-
-  # ---- Let's Encrypt SSL 证书 ----
-  certbot:
-    image: certbot/certbot
-    container_name: lifecycle-certbot
-    volumes:
-      - certbot-conf:/etc/letsencrypt
-      - certbot-www:/var/www/certbot
-    # 自动续期: 每 12 小时检查一次
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
-
-  # ---- 定时任务: 过期检查 ----
-  cron:
-    image: alpine:latest
-    container_name: lifecycle-cron
-    restart: unless-stopped
-    depends_on:
-      app:
-        condition: service_healthy
-    environment:
-      - CRON_SECRET=${CRON_SECRET}
-      - APP_URL=http://app:3000
-    entrypoint: >
-      /bin/sh -c '
-        echo "0 8 * * * wget -q --header=\"Authorization: Bearer $${CRON_SECRET}\" -O- $${APP_URL}/api/cron/check-expiry > /proc/1/fd/1 2>&1" > /etc/crontabs/root
-        && crond -f -l 2
-      '
-    networks:
-      - lifecycle-net
+      - lifecycle-data:/app/data
 
 volumes:
-  app-data:
+  lifecycle-data:
     name: lifecycle-data
-  certbot-conf:
-  certbot-www:
-
-networks:
-  lifecycle-net:
-    name: lifecycle-net
