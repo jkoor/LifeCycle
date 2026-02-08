@@ -45,7 +45,6 @@ interface ItemMobileRowProps {
   item: InventoryItem
   categories: Category[]
   className?: string
-  isArchived?: boolean
 }
 
 /**
@@ -61,7 +60,6 @@ export function ItemMobileRow({
   item,
   categories,
   className,
-  isArchived,
 }: ItemMobileRowProps) {
   const { requestDelete } = useDeleteDialog()
 

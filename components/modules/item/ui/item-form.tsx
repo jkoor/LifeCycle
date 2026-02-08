@@ -250,9 +250,9 @@ export function ItemForm({
                             >
                               {field.value
                                 ? categorySelect.categories.find(
-                                    (category: Category) =>
-                                      category.id === field.value
-                                  )?.name
+                                  (category: Category) =>
+                                    category.id === field.value
+                                )?.name
                                 : "选择分类"}
                               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                             </Button>
@@ -287,7 +287,7 @@ export function ItemForm({
                                     ) : (
                                       <Plus className="mr-2 h-3 w-3" />
                                     )}
-                                    创建 "{categorySelect.searchValue}"
+                                    创建 &quot;{categorySelect.searchValue}&quot;
                                   </Button>
                                 </div>
                               </CommandEmpty>
@@ -412,7 +412,7 @@ export function ItemForm({
                         disabled={form.watch("isStockFixed")}
                         className={cn(
                           form.watch("isStockFixed") &&
-                            "bg-muted cursor-not-allowed"
+                          "bg-muted cursor-not-allowed"
                         )}
                       />
                     </FormControl>

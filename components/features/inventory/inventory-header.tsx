@@ -1,10 +1,4 @@
-import { Category } from "@prisma/client"
-
-interface InventoryHeaderProps {
-  categories: Category[]
-}
-
-export function InventoryHeader({ categories }: InventoryHeaderProps) {
+export function InventoryHeader() {
   return (
     <div className="flex items-center justify-between">
       <div>

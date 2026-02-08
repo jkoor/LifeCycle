@@ -1,11 +1,11 @@
 "use server"
 
+import { Prisma } from "@prisma/client"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { prisma } from "@/lib/prisma"
 import { itemFormSchema, ItemFormValues } from "@/lib/schemas/item-schema"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 
 export async function createItem(data: ItemFormValues) {
   const session = await auth.api.getSession({
@@ -107,6 +107,7 @@ export async function deleteItem(id: string) {
     revalidatePath("/inventory")
     return { success: true }
   } catch (error) {
+    console.error("Failed to delete item:", error)
     return { error: "Failed to delete item" }
   }
 }
@@ -230,7 +231,7 @@ export async function replaceItem(id: string) {
     const replacedAt = new Date()
 
     // 2. 使用事务同时更新物品和创建快照日志
-    const [updatedItem, newLog] = await prisma.$transaction([
+    const [, newLog] = await prisma.$transaction([
       // 更新物品状态
       prisma.item.update({
         where: { id, userId: session.user.id },
@@ -285,7 +286,7 @@ export async function undoReplaceItem(
 
   try {
     // 使用事务同时恢复物品状态和删除日志
-    const operations = [
+    const operations: Prisma.PrismaPromise<unknown>[] = [
       // 恢复物品状态
       prisma.item.update({
         where: { id, userId: session.user.id },
@@ -301,7 +302,7 @@ export async function undoReplaceItem(
       operations.push(
         prisma.usageLog.delete({
           where: { id: usageLogId },
-        }) as any, // Type assertion needed for transaction array
+        })
       )
     }
 
@@ -330,6 +331,7 @@ export async function toggleArchive(id: string, isArchived: boolean) {
     revalidatePath("/inventory")
     return { success: true }
   } catch (error) {
+    console.error("Failed to update archive status:", error)
     return { error: "Failed to update archive status" }
   }
 }
@@ -350,6 +352,7 @@ export async function togglePin(id: string, isPinned: boolean) {
     revalidatePath("/inventory")
     return { success: true }
   } catch (error) {
+    console.error("Failed to update pin status:", error)
     return { error: "Failed to update pin status" }
   }
 }

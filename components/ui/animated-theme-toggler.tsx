@@ -53,13 +53,13 @@ export const AnimatedThemeToggler = ({
     const currentIndex = themeOrder.indexOf((theme as ThemeType) || "system")
     const newTheme = themeOrder[(currentIndex + 1) % 3]
 
-    // @ts-ignore
+    // @ts-expect-error - startViewTransition is experimental and not in TS lib yet
     if (!document.startViewTransition) {
       setTheme(newTheme)
       return
     }
 
-    // @ts-ignore
+    // @ts-expect-error - startViewTransition is experimental and not in TS lib yet
     await document.startViewTransition(() => {
       flushSync(() => {
         setTheme(newTheme)

@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react"
 import {
   SettingsSection,
   SettingsCard,
-  SettingsRow,
   SettingsGroup,
 } from "@/components/modules/settings/ui"
 import { Switch } from "@/components/ui/switch"
@@ -30,7 +29,6 @@ import {
   X,
   Check,
 } from "lucide-react"
-import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import {
   getWebhookConfigs,

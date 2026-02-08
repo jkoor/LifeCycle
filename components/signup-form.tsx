@@ -28,7 +28,6 @@ import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { BorderBeam } from "@/components/ui/border-beam"
-import { Logo } from "@/components/common/logo"
 
 export function SignupForm({
   className,

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Category } from "@prisma/client"
 import { InventoryItem, getRemainingDays } from "@/components/modules/item"
@@ -20,7 +20,6 @@ interface InventoryMobileGridProps {
   categories: Category[]
   sortBy?: SortByOption
   sortDir?: SortDirOption
-  isArchived?: boolean
 }
 
 /**
@@ -35,43 +34,54 @@ export function InventoryMobileGrid({
   categories,
   sortBy = "remainingDays",
   sortDir = "asc",
-  isArchived = false,
 }: InventoryMobileGridProps) {
   const router = useRouter()
 
   // 排序函数
-  const sortItems = (itemsToSort: InventoryItem[]) => {
-    return [...itemsToSort].sort((a, b) => {
-      let comparison = 0
-      switch (sortBy) {
-        case "name":
-          comparison = a.name.localeCompare(b.name, "zh-CN")
-          break
-        case "price":
-          comparison = (a.price ?? 0) - (b.price ?? 0)
-          break
-        case "stock":
-          comparison = (a.stock ?? 0) - (b.stock ?? 0)
-          break
-        case "lastReplaced":
-          const aTime = a.lastOpenedAt ? new Date(a.lastOpenedAt).getTime() : 0
-          const bTime = b.lastOpenedAt ? new Date(b.lastOpenedAt).getTime() : 0
-          comparison = aTime - bTime
-          break
-        case "remainingDays":
-        default:
-          const aRemaining = getRemainingDays(a)
-          const bRemaining = getRemainingDays(b)
-          // null 值排到最后
-          if (aRemaining === null && bRemaining === null) comparison = 0
-          else if (aRemaining === null) comparison = 1
-          else if (bRemaining === null) comparison = -1
-          else comparison = aRemaining - bRemaining
-          break
-      }
-      return sortDir === "desc" ? -comparison : comparison
-    })
-  }
+  const sortItems = useCallback(
+    (itemsToSort: InventoryItem[]) => {
+      return [...itemsToSort].sort((a, b) => {
+        let comparison = 0
+        switch (sortBy) {
+          case "name": {
+            comparison = a.name.localeCompare(b.name, "zh-CN")
+            break
+          }
+          case "price": {
+            comparison = (a.price ?? 0) - (b.price ?? 0)
+            break
+          }
+          case "stock": {
+            comparison = (a.stock ?? 0) - (b.stock ?? 0)
+            break
+          }
+          case "lastReplaced": {
+            const aTime = a.lastOpenedAt
+              ? new Date(a.lastOpenedAt).getTime()
+              : 0
+            const bTime = b.lastOpenedAt
+              ? new Date(b.lastOpenedAt).getTime()
+              : 0
+            comparison = aTime - bTime
+            break
+          }
+          case "remainingDays":
+          default: {
+            const aRemaining = getRemainingDays(a)
+            const bRemaining = getRemainingDays(b)
+            // null 值排到最后
+            if (aRemaining === null && bRemaining === null) comparison = 0
+            else if (aRemaining === null) comparison = 1
+            else if (bRemaining === null) comparison = -1
+            else comparison = aRemaining - bRemaining
+            break
+          }
+        }
+        return sortDir === "desc" ? -comparison : comparison
+      })
+    },
+    [sortBy, sortDir]
+  )
 
   // 分组并排序物品
   const groupedAndSortedItems = useMemo(() => {
@@ -97,7 +107,7 @@ export function InventoryMobileGrid({
     )
 
     return sortedEntries
-  }, [items, sortBy, sortDir])
+  }, [items, sortItems])
 
   // 获取所有分类名称作为默认展开项
   const allCategoryNames = groupedAndSortedItems.map(([name]) => name)
@@ -131,7 +141,6 @@ export function InventoryMobileGrid({
                       key={item.id}
                       item={item}
                       categories={categories}
-                      isArchived={isArchived}
                     />
                   ))}
                 </div>

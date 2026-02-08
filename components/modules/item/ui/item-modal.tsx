@@ -124,7 +124,8 @@ export function ItemModal({
         setOpen(false)
         router.refresh()
       }
-    } catch (e) {
+    } catch (error) {
+      console.error("Failed to submit item form:", error)
       toast({
         variant: "destructive",
         title: "Error",

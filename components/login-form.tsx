@@ -17,7 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import { Field, FieldDescription, FieldSeparator } from "@/components/ui/field"
+import { FieldDescription } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -29,7 +29,6 @@ import { useRouter } from "next/navigation"
 import { Loader2, Fingerprint } from "lucide-react"
 import { toast } from "sonner"
 import { BorderBeam } from "@/components/ui/border-beam"
-import { Logo } from "@/components/common/logo"
 import {
   InputOTP,
   InputOTPGroup,

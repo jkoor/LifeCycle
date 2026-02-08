@@ -33,7 +33,6 @@ import { cn } from "@/lib/utils"
 interface ItemRowProps {
   item: InventoryItem
   categories: Category[]
-  isArchived?: boolean
 }
 
 /**
@@ -42,7 +41,7 @@ interface ItemRowProps {
  * 使用 useItem Hook 和原子组件。
  * 删除确认由外层 DeleteDialogProvider 处理。
  */
-export function ItemRow({ item, categories, isArchived }: ItemRowProps) {
+export function ItemRow({ item, categories }: ItemRowProps) {
   const { requestDelete } = useDeleteDialog()
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
@@ -127,8 +126,8 @@ export function ItemRow({ item, categories, isArchived }: ItemRowProps) {
         <TableCell className="h-16 px-2 text-sm text-muted-foreground text-center">
           {item.lastOpenedAt
             ? format(new Date(item.lastOpenedAt), "yyyy-MM-dd", {
-                locale: zhCN,
-              })
+              locale: zhCN,
+            })
             : "-"}
         </TableCell>
 
