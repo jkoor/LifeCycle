@@ -155,6 +155,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - DATABASE_PROVIDER=sqlite
       - DATABASE_URL=file:./prisma/dev.db
       - CRON_ENABLED=true
       - CRON_SCHEDULE=0 9 * * *       # 每天 09:00
@@ -197,6 +198,27 @@ module.exports = {
 #### 方式二：Vercel Cron Jobs
 
 适用于 Vercel 托管部署。需要设置 `CRON_ENABLED=false` 以禁用内置调度器，避免重复触发。
+
+**数据库配置：** Vercel 是 Serverless 平台，不支持本地 SQLite 文件持久化。需使用 [Turso](https://turso.tech) 作为远程数据库：
+
+1. 在 Turso 创建数据库，获取连接 URL 和 Auth Token
+2. 在 Vercel 项目设置中添加以下环境变量：
+
+```env
+DATABASE_PROVIDER=turso
+DATABASE_URL=file:./placeholder.db           # Prisma CLI 需要，运行时不使用
+TURSO_DATABASE_URL=libsql://your-db.turso.io
+TURSO_AUTH_TOKEN=your-turso-auth-token
+CRON_SECRET=your-random-secret
+CRON_ENABLED=false
+```
+
+3. 将数据库迁移推送到 Turso：
+
+```bash
+# 使用 turso db shell 或 prisma db push 配合 Turso URL
+turso db shell your-db < prisma/migrations/xxx/migration.sql
+```
 
 在项目根目录创建 `vercel.json`：
 

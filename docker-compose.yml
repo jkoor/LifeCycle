@@ -20,6 +20,7 @@ services:
     ports:
       - "${APP_PORT:-3000}:3000"
     environment:
+      - DATABASE_PROVIDER=sqlite
       - DATABASE_URL=file:/app/data/lifecycle.db
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}

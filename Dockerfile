@@ -44,6 +44,9 @@ COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
 COPY --from=builder /app/prisma ./prisma
 
+# 复制 LibSQL 驱动（Turso 模式需要）
+COPY --from=builder /app/node_modules/@libsql ./node_modules/@libsql
+
 # 复制构建产物
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
