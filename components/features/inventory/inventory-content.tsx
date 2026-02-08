@@ -4,7 +4,7 @@ import { Suspense } from "react"
 import { PageContainer } from "@/components/common"
 import { InventoryToolbar } from "@/components/features/inventory/inventory-toolbar"
 import { InventoryContainer } from "@/components/features/inventory/inventory-container"
-import { Category } from "@prisma/client"
+import type { Category } from "@prisma/client"
 import { InventoryItem } from "@/components/modules/item/types"
 import { SortByOption, SortDirOption } from "@/app/inventory/search-params"
 

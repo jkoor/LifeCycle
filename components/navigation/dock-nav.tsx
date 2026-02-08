@@ -8,7 +8,7 @@ import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { AddItemModal } from "@/components/modules/item/ui"
-import { Category } from "@prisma/client"
+import type { Category } from "@prisma/client"
 import { useScrollState } from "@/components/providers/scroll-provider"
 
 interface DockNavProps {

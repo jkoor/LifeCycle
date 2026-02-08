@@ -23,7 +23,7 @@ import { Sidebar, SidebarBody } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 import { AddItemModal } from "@/components/modules/item/ui"
-import { Category } from "@prisma/client"
+import type { Category } from "@prisma/client"
 
 interface AppSidebarProps {
   categories?: Category[]

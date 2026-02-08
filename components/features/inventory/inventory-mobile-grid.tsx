@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Category } from "@prisma/client"
+import type { Category } from "@prisma/client"
 import { InventoryItem, getRemainingDays } from "@/components/modules/item"
 import { DeleteDialogProvider } from "@/components/common/delete-dialog-provider"
 import { ItemMobileRow } from "./inventory-mobile-row"

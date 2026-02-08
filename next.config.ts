@@ -6,6 +6,11 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  experimental: {
+    outputFileTracingIncludes: {
+      "*": ["prisma/migrations/**", "prisma/schema.prisma"],
+    },
+  },
   images: {
     unoptimized: true,
   },

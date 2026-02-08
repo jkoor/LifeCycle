@@ -22,7 +22,7 @@ import {
 import { ItemForm } from "./item-form"
 import { ItemFormValues } from "@/lib/schemas/item-schema"
 import { createItem, updateItem } from "@/app/actions/item"
-import { Category } from "@prisma/client"
+import type { Category } from "@prisma/client"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
 import { InventoryItem } from "@/types/inventory"

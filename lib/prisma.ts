@@ -17,7 +17,9 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 async function createPrismaClient(): Promise<PrismaClient> {
-  const provider = process.env.DATABASE_PROVIDER ?? "sqlite"
+  const hasTursoConfig =
+    !!process.env.TURSO_DATABASE_URL && !!process.env.TURSO_AUTH_TOKEN
+  const provider = process.env.DATABASE_PROVIDER ?? (hasTursoConfig ? "turso" : "sqlite")
 
   if (provider === "turso") {
     const { PrismaLibSQL } = await import("@prisma/adapter-libsql")

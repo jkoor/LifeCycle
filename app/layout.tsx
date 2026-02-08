@@ -63,11 +63,10 @@ export default async function RootLayout({
   let categories = [] as Awaited<ReturnType<typeof prisma.category.findMany>>
   try {
     categories = await prisma.category.findMany()
-  } catch (error: unknown) {
-    const prismaError = error as { code?: string }
-    if (prismaError.code !== "P2021") {
-      throw error
-    }
+  } catch {
+    // 构建时预渲染 (如 /_not-found) 可能在数据库迁移完成前执行，
+    // Turso 适配器抛出 PrismaClientUnknownRequestError 而非 P2021，
+    // 此处捕获所有错误并降级为空分类，运行时 instrumentation.ts 会确保表存在
   }
 
   return (
