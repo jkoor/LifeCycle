@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { IconDownload, IconX, IconDeviceMobile } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -10,12 +10,47 @@ interface BeforeInstallPromptEvent extends Event {
     userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
+const STORAGE_KEY = "pwa-install-dismissed"
+const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000 // 7 天
+const FIRST_SHOW_DELAY_MS = 60 * 1000 // 首次访问 60 秒后才显示
+
+/** 检查是否在 dismiss 冷却期内 */
+function isInCooldown(): boolean {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        if (!raw) return false
+        const data = JSON.parse(raw) as { time: number; count: number }
+        // 被 dismiss 次数越多，冷却时间越长（指数退避，最长 30 天）
+        const multiplier = Math.min(data.count, 5) // 1x, 2x, 3x, 4x, 5x
+        const cooldown = DISMISS_COOLDOWN_MS * multiplier
+        return Date.now() - data.time < cooldown
+    } catch {
+        return false
+    }
+}
+
+/** 记录一次 dismiss */
+function recordDismiss(): void {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        let count = 1
+        if (raw) {
+            const data = JSON.parse(raw) as { count: number }
+            count = (data.count || 0) + 1
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ time: Date.now(), count }))
+    } catch {
+        // ignore
+    }
+}
+
 export function PWAInstallPrompt() {
     const [deferredPrompt, setDeferredPrompt] =
         useState<BeforeInstallPromptEvent | null>(null)
     const [showInstallBanner, setShowInstallBanner] = useState(false)
     const [isIOS, setIsIOS] = useState(false)
     const [isStandalone, setIsStandalone] = useState(false)
+    const hasShownRef = useRef(false)
 
     useEffect(() => {
         // 检查是否已经以 PWA 模式运行
@@ -24,49 +59,50 @@ export function PWAInstallPrompt() {
             (window.navigator as unknown as { standalone?: boolean }).standalone === true
 
         setIsStandalone(standalone)
-
         if (standalone) return
+
+        // 冷却期内不显示
+        if (isInCooldown()) return
+
+        // 本次会话已展示过则不重复弹出
+        if (hasShownRef.current) return
 
         // 检查是否为 iOS
         const userAgent = window.navigator.userAgent.toLowerCase()
         const isIOSDevice = /iphone|ipad|ipod/.test(userAgent)
         setIsIOS(isIOSDevice)
 
-        // 检查是否已经dismiss过（24小时内不再显示）
-        const dismissedAt = localStorage.getItem("pwa-install-dismissed")
-        if (dismissedAt) {
-            const dismissedTime = parseInt(dismissedAt, 10)
-            if (Date.now() - dismissedTime < 24 * 60 * 60 * 1000) return
-        }
-
         // 监听 beforeinstallprompt 事件（仅限支持的浏览器）
         const handleBeforeInstallPrompt = (e: Event) => {
             e.preventDefault()
             setDeferredPrompt(e as BeforeInstallPromptEvent)
-            setShowInstallBanner(true)
+            // 延迟显示，避免刚进页面就弹提示
+            setTimeout(() => {
+                if (!hasShownRef.current) {
+                    hasShownRef.current = true
+                    setShowInstallBanner(true)
+                }
+            }, FIRST_SHOW_DELAY_MS)
         }
 
         window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
 
-        // iOS 设备显示手动安装提示
+        // iOS 设备显示手动安装提示（同样延迟）
+        let iosTimer: ReturnType<typeof setTimeout> | undefined
         if (isIOSDevice) {
-            const timer = setTimeout(() => setShowInstallBanner(true), 3000)
-            return () => {
-                clearTimeout(timer)
-                window.removeEventListener(
-                    "beforeinstallprompt",
-                    handleBeforeInstallPrompt
-                )
-            }
+            iosTimer = setTimeout(() => {
+                if (!hasShownRef.current) {
+                    hasShownRef.current = true
+                    setShowInstallBanner(true)
+                }
+            }, FIRST_SHOW_DELAY_MS)
         }
 
         return () => {
-            window.removeEventListener(
-                "beforeinstallprompt",
-                handleBeforeInstallPrompt
-            )
+            window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
+            if (iosTimer) clearTimeout(iosTimer)
         }
-    }, [])
+    }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleInstall = useCallback(async () => {
         if (!deferredPrompt) return
@@ -80,7 +116,7 @@ export function PWAInstallPrompt() {
 
     const handleDismiss = useCallback(() => {
         setShowInstallBanner(false)
-        localStorage.setItem("pwa-install-dismissed", Date.now().toString())
+        recordDismiss()
     }, [])
 
     if (isStandalone || !showInstallBanner) return null
