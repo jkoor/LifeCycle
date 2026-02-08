@@ -59,7 +59,8 @@ export function renderTemplate(
 // 发送 Webhook
 // ==========================================
 
-const WEBHOOK_TIMEOUT_MS = 10_000 // 10 秒超时
+/** 单个 Webhook 请求超时 (ms)，可通过 WEBHOOK_TIMEOUT_MS 环境变量覆盖 */
+const WEBHOOK_TIMEOUT_MS = Number(process.env.WEBHOOK_TIMEOUT_MS) || 10_000
 
 /**
  * 向单个 Webhook 端点发送通知

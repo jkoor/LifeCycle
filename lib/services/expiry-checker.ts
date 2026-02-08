@@ -261,11 +261,6 @@ async function processNotificationTask(
         stock: String(item.stock),
       }
 
-      // ── 发送间隔：防止触发 Webhook 端点的速率限制 ──
-      if (sent + failed > 0) {
-        await sleep(5000)
-      }
-
       // ── 发送通知 ──
       const results: WebhookSendResult[] = await sendToAllWebhooks(
         [webhook],
@@ -393,9 +388,4 @@ function addDays(date: Date, days: number): Date {
   const result = new Date(date)
   result.setDate(result.getDate() + days)
   return result
-}
-
-/** 延迟指定毫秒 */
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }

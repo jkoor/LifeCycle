@@ -56,19 +56,22 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 ```
 触发层 (可替换)                         业务逻辑层 (不变)
 ┌──────────────────────┐        ┌───────────────────────────┐
-│ Vercel Cron          │        │                           │
-│ GitHub Actions       │──GET──▶│  /api/cron/check-expiry   │
-│ 外部调度器 (curl)     │  POST  │  (鉴权 → 调用服务 → 返回) │
+│ node-cron (内置)     │        │                           │
+│ Vercel Cron          │        │  /api/cron/check-expiry   │
+│ GitHub Actions       │──GET──▶│  (鉴权 → 调用服务 → 返回) │
+│ 外部调度器 (curl)     │  POST  │                           │
 │ 手动触发             │        └───────────┬───────────────┘
 └──────────────────────┘                    │
                                             ▼
-                                ┌───────────────────────────┐
-                                │  lib/services/             │
-                                │  ├─ expiry-checker.ts      │
-                                │  │   查询·分组·去重·编排    │
-                                │  └─ webhook-sender.ts      │
-                                │      模板渲染·HTTP发送      │
-                                └───────────────────────────┘
+  instrumentation.ts                ┌───────────────────────────┐
+  (服务器启动时自动加载)             │  lib/services/             │
+          │                         │  ├─ cron-scheduler.ts      │
+          └─ startScheduler() ─────▶│  │   node-cron 调度管理     │
+                                    │  ├─ expiry-checker.ts      │
+                                    │  │   查询·分组·去重·编排    │
+                                    │  └─ webhook-sender.ts      │
+                                    │      模板渲染·HTTP发送      │
+                                    └───────────────────────────┘
 ```
 
 ### 环境变量
@@ -76,8 +79,33 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 在 `.env`（本地）或部署平台的环境变量设置中添加：
 
 ```bash
-# 必需：Cron 接口鉴权密钥，建议使用 32+ 字符的随机字符串
-# 未设置时，所有 cron 请求将被拒绝（安全默认策略）
+# ── Cron 调度器配置 ──
+
+# 是否启用内置 node-cron 调度器 (默认 true)
+# 如果使用外部触发器 (Vercel Cron / GitHub Actions)，可设为 false
+CRON_ENABLED=true
+
+# Cron 表达式 (默认每天 09:00)
+# 常用示例:
+#   "0 9 * * *"     — 每天 09:00
+#   "0 9,18 * * *"  — 每天 09:00 和 18:00
+#   "0 */6 * * *"   — 每 6 小时
+#   "*/30 * * * *"  — 每 30 分钟 (调试用)
+CRON_SCHEDULE="0 9 * * *"
+
+# Cron 时区 (默认 Asia/Shanghai)
+CRON_TIMEZONE=Asia/Shanghai
+
+# ── Webhook 配置 ──
+
+# 单个 Webhook 请求超时 (毫秒，默认 10000)
+WEBHOOK_TIMEOUT_MS=10000
+
+# ── API 鉴权 (仅通过 HTTP API 触发时需要) ──
+
+# Cron 接口鉴权密钥，建议使用 32+ 字符的随机字符串
+# 未设置时，所有 HTTP cron 请求将被拒绝（安全默认策略）
+# 内置 node-cron 调度器不需要此密钥
 CRON_SECRET=your-random-secret-here
 ```
 
@@ -89,7 +117,86 @@ openssl rand -base64 32
 
 ### 部署方式
 
-#### 方式一：Vercel Cron Jobs（推荐）
+#### 方式一：自托管 + 内置 node-cron（推荐）
+
+项目内置了基于 `node-cron` 的调度器，服务器启动时自动运行，**无需任何外部依赖**。
+
+##### Docker 部署
+
+```dockerfile
+FROM node:20-alpine AS base
+
+# ... 构建阶段省略 (参见 Next.js standalone 部署文档) ...
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+# Cron 配置 (可在 docker-compose 或 docker run 中覆盖)
+ENV CRON_ENABLED=true
+ENV CRON_SCHEDULE="0 9 * * *"
+ENV CRON_TIMEZONE=Asia/Shanghai
+ENV WEBHOOK_TIMEOUT_MS=10000
+
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+```yaml
+# docker-compose.yml
+services:
+  lifecycle:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=file:./prisma/dev.db
+      - CRON_ENABLED=true
+      - CRON_SCHEDULE=0 9 * * *       # 每天 09:00
+      - CRON_TIMEZONE=Asia/Shanghai
+      - WEBHOOK_TIMEOUT_MS=10000
+      - CRON_SECRET=your-random-secret  # 仅 HTTP API 触发需要
+    volumes:
+      - ./data:/app/prisma  # 持久化 SQLite 数据库
+```
+
+##### PM2 部署
+
+```bash
+# 构建
+pnpm build
+
+# 启动 (环境变量通过 ecosystem 配置)
+pm2 start ecosystem.config.js
+```
+
+```js
+// ecosystem.config.js
+module.exports = {
+  apps: [{
+    name: "lifecycle",
+    script: ".next/standalone/server.js",
+    env: {
+      NODE_ENV: "production",
+      CRON_ENABLED: "true",
+      CRON_SCHEDULE: "0 9 * * *",
+      CRON_TIMEZONE: "Asia/Shanghai",
+      WEBHOOK_TIMEOUT_MS: "10000",
+    },
+  }],
+}
+```
+
+> **工作原理：** 服务启动时，Next.js 的 `instrumentation.ts` hook 自动调用 `startScheduler()`，在 Node.js 进程内注册 cron 任务。日志输出到 stdout，可通过 `docker logs` 或 PM2 日志查看调度状态。
+
+#### 方式二：Vercel Cron Jobs
+
+适用于 Vercel 托管部署。需要设置 `CRON_ENABLED=false` 以禁用内置调度器，避免重复触发。
 
 在项目根目录创建 `vercel.json`：
 
@@ -106,9 +213,9 @@ openssl rand -base64 32
 
 > **说明：** `0 9 * * *` 表示每天 UTC 09:00（北京时间 17:00）执行一次。Vercel 会自动在请求头中注入 `x-vercel-cron-token`，其值等于环境变量 `CRON_SECRET`，无需额外配置。
 
-在 Vercel 项目设置中添加环境变量 `CRON_SECRET`。
+在 Vercel 项目设置中添加环境变量 `CRON_SECRET` 和 `CRON_ENABLED=false`。
 
-#### 方式二：GitHub Actions
+#### 方式三：GitHub Actions
 
 在仓库中创建 `.github/workflows/cron-check-expiry.yml`：
 
@@ -134,7 +241,7 @@ jobs:
 - `APP_URL` — 你的应用地址，如 `https://lifecycle.example.com`
 - `CRON_SECRET` — 与 `.env` 中一致的密钥
 
-#### 方式三：外部调度器 / 手动触发
+#### 方式四：外部调度器 / 手动触发
 
 ```bash
 # 手动执行一次
@@ -170,8 +277,19 @@ curl -X POST https://your-domain.com/api/cron/check-expiry \
 
 | 措施 | 说明 |
 |------|------|
-| CRON_SECRET 鉴权 | 必须在 `Authorization: Bearer <secret>` 或 `x-vercel-cron-token` 中携带正确密钥 |
-| 安全默认策略 | 未配置 `CRON_SECRET` 时**拒绝所有请求**，不会意外暴露 |
+| CRON_SECRET 鉴权 | HTTP API 触发时必须在 `Authorization: Bearer <secret>` 或 `x-vercel-cron-token` 中携带正确密钥 |
+| 安全默认策略 | 未配置 `CRON_SECRET` 时**拒绝所有 HTTP 请求**，不会意外暴露 |
 | 独立鉴权 | `/api/cron/*` 不经过 session 中间件，与用户登录体系隔离 |
-| Webhook 超时 | 每个 Webhook 请求 10 秒超时，防止慢速端点阻塞整个流程 |
+| Webhook 超时 | 每个 Webhook 请求默认 10 秒超时 (`WEBHOOK_TIMEOUT_MS`)，防止慢速端点阻塞 |
 | 通知去重 | `NotificationLog` 表按 `(itemId, webhookId, expiryDate)` 唯一约束，杜绝重复通知 |
+| 幂等启动 | `startScheduler()` 多次调用安全，会先停止旧任务再注册新任务 |
+
+### 环境变量速查表
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `CRON_ENABLED` | `true` | 是否启用内置 node-cron 调度器 |
+| `CRON_SCHEDULE` | `0 9 * * *` | Cron 表达式 |
+| `CRON_TIMEZONE` | `Asia/Shanghai` | Cron 时区 |
+| `WEBHOOK_TIMEOUT_MS` | `10000` | 单个 Webhook 请求超时 (毫秒) |
+| `CRON_SECRET` | _(无)_ | HTTP API 鉴权密钥 (内置调度器不需要) |
