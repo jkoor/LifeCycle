@@ -60,7 +60,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
-  const categories = await prisma.category.findMany()
+  let categories = [] as Awaited<ReturnType<typeof prisma.category.findMany>>
+  try {
+    categories = await prisma.category.findMany()
+  } catch (error: unknown) {
+    const prismaError = error as { code?: string }
+    if (prismaError.code !== "P2021") {
+      throw error
+    }
+  }
 
   return (
     <html lang="zh-CN" className={fontSans.variable} suppressHydrationWarning>

@@ -27,6 +27,11 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Prepare database
+        run: pnpm db:push
+        env:
+          DATABASE_URL: "file:./ci.db"
+
       - name: Build
         run: pnpm build
         env:

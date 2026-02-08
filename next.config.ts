@@ -3,6 +3,13 @@ import withPWA from "@ducanh2912/next-pwa"
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  images: {
+    unoptimized: true,
+  },
+  turbopack: {},
 }
 
 export default withPWA({

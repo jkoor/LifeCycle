@@ -33,6 +33,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN pnpm build
 
+# 兼容 pnpm 布局：将 Prisma engines 放到 /app/node_modules/.prisma 以便后续复制
+RUN mkdir -p /app/node_modules/.prisma && \
+  cp -r /app/node_modules/.pnpm/@prisma+client*/node_modules/.prisma/* /app/node_modules/.prisma/
+
 # ---- Production ----
 FROM node:22-alpine AS runner
 WORKDIR /app

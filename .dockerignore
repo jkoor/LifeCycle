@@ -30,6 +30,7 @@ LICENSE
 
 # Deploy scripts (not needed in image)
 deploy/
+!deploy/entrypoint.sh
 docker-compose*.yml
 
 # GitHub
