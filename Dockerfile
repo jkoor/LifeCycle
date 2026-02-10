@@ -95,8 +95,10 @@ function copyDeps(name, visited) { \
     for (const dep of Object.keys(pkg.dependencies || {})) copyDeps(dep, visited); \
   } catch {} \
 } \
-copyDeps('prisma', new Set()); \
-console.log('[builder] Prisma CLI dependencies extracted'); \
+const visited = new Set(); \
+copyDeps('prisma', visited); \
+copyDeps('dotenv', visited); \
+console.log('[builder] Prisma CLI dependencies extracted:', visited.size, 'packages'); \
 "
 
 # ---- 清理 Prisma CLI 中非目标平台的文件 ----
@@ -147,8 +149,9 @@ ENV HOSTNAME="0.0.0.0"
 
 # ---- 按变更频率从低到高复制文件，优化层缓存 ----
 
-# 1. Prisma schema + 迁移文件（数据库结构变更时才变）
+# 1. Prisma schema + 迁移文件 + 配置（数据库结构变更时才变）
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 
 # 2. 静态资源（PWA icons 等，较少变化）
 COPY --from=builder /app/public ./public
