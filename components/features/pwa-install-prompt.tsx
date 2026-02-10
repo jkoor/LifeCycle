@@ -102,7 +102,7 @@ export function PWAInstallPrompt() {
             window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
             if (iosTimer) clearTimeout(iosTimer)
         }
-    }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [])
 
     const handleInstall = useCallback(async () => {
         if (!deferredPrompt) return

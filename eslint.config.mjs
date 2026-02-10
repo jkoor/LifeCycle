@@ -13,6 +13,7 @@ export default tseslint.config(
       "**/build/**",
       "next-env.d.ts",
       "**/*.d.ts",
+      "public/*.js",
     ],
   },
   js.configs.recommended,
