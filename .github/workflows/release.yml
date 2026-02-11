@@ -68,6 +68,8 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+            # Commit SHA: sha-88f2b3a
+            type=sha,format=short,prefix=sha-
             # Manual dispatch: use input tag or 'latest'
             type=raw,value=${{ github.event.inputs.tag || 'latest' }},enable=${{ github.event_name == 'workflow_dispatch' }}
 
