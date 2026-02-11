@@ -70,6 +70,18 @@
       transform: translateZ(0) rotate(360deg);
     }
   }
+  @keyframes breathing-light {
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.5);
+    }
+  }
+  --animate-breathing-light: breathing-light 2s ease-in-out infinite;
 }
 
 :root {
