@@ -9,6 +9,8 @@ on:
 jobs:
   lint-and-build:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "file:./ci.db"
     steps:
       - uses: actions/checkout@v4
 
