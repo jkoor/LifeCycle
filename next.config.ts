@@ -6,8 +6,18 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  serverExternalPackages: [
+    "better-sqlite3",
+    "@prisma/adapter-better-sqlite3",
+    "@libsql/client",
+    "@prisma/adapter-libsql",
+  ],
   outputFileTracingIncludes: {
-    "*": ["prisma/migrations/**", "prisma/schema.prisma", "generated/prisma/**"],
+    "*": [
+      "prisma/migrations/**",
+      "prisma/schema.prisma",
+      "generated/prisma/**",
+    ],
   },
   outputFileTracingExcludes: {
     "*": [

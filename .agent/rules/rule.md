@@ -6,6 +6,8 @@ trigger: always_on
 
 This file provides strict guidance for the AI Agent when working with code in this repository.
 
+Please use Chinese to communicate with me.
+
 ## Project Overview
 
 This is a **Next.js 16** application focusing on inventory/lifecycle features, built with a modern, high-performance tech stack. The project emphasizes a strict separation of concerns between **UI Atoms**, **Domain Entities**, and **Feature Pages**.

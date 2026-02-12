@@ -13,48 +13,60 @@ import { PrismaClient } from "@/generated/prisma/client"
  *
  * Prisma 7: 所有数据库都需要 driver adapter
  */
+
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
-  prismaPromise: Promise<PrismaClient> | undefined
 }
 
-async function createPrismaClient(): Promise<PrismaClient> {
+const createPrismaClient = () => {
   const hasTursoConfig =
     !!process.env.TURSO_DATABASE_URL && !!process.env.TURSO_AUTH_TOKEN
-  const provider = process.env.DATABASE_PROVIDER ?? (hasTursoConfig ? "turso" : "sqlite")
+  const provider =
+    process.env.DATABASE_PROVIDER ?? (hasTursoConfig ? "turso" : "sqlite")
 
   if (provider === "turso") {
-    const { PrismaLibSQL } = await import("@prisma/adapter-libsql")
+    // Turso / LibSQL Adapter
     const url = process.env.TURSO_DATABASE_URL
     const authToken = process.env.TURSO_AUTH_TOKEN
 
-    if (!url) {
+    if (!url || !authToken) {
       throw new Error(
-        "DATABASE_PROVIDER 为 turso 时，必须设置 TURSO_DATABASE_URL 环境变量"
-      )
-    }
-    if (!authToken) {
-      throw new Error(
-        "DATABASE_PROVIDER 为 turso 时，必须设置 TURSO_AUTH_TOKEN 环境变量"
+        "Using Turso requires TURSO_DATABASE_URL and TURSO_AUTH_TOKEN",
       )
     }
 
-    const adapter = new PrismaLibSQL({ url, authToken })
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { PrismaLibSQL } = require("@prisma/adapter-libsql")
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { createClient } = require("@libsql/client")
+
+    const libsql = createClient({
+      url,
+      authToken,
+    })
+
+    const adapter = new PrismaLibSQL(libsql)
+    return new PrismaClient({ adapter })
+  } else {
+    // Local SQLite Adapter
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3")
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const Database = require("better-sqlite3")
+
+    const databaseUrl = process.env.DATABASE_URL || "file:./dev.db"
+    // Extract filename from "file:./dev.db" -> "./dev.db"
+    const filename = databaseUrl.replace(/^file:/, "")
+
+    const db = new Database(filename)
+    const adapter = new PrismaBetterSqlite3(db)
+
     return new PrismaClient({ adapter })
   }
-
-  // 默认：本地 SQLite，使用 @prisma/adapter-better-sqlite3
-  const { PrismaBetterSqlite3 } = await import("@prisma/adapter-better-sqlite3")
-  const adapter = new PrismaBetterSqlite3({
-    url: process.env.DATABASE_URL || "file:./dev.db",
-  })
-  return new PrismaClient({ adapter })
 }
 
-const prismaPromise = globalForPrisma.prismaPromise ?? createPrismaClient()
-export const prisma = await prismaPromise
+export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prismaPromise = prismaPromise
   globalForPrisma.prisma = prisma
 }

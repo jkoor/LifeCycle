@@ -31,9 +31,6 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY prisma/schema.prisma ./prisma/schema.prisma
 COPY prisma.config.ts ./prisma.config.ts
 
-# postinstall 会触发 prisma generate，需要 DATABASE_URL
-ENV DATABASE_URL="file:./placeholder.db"
-
 # 安装全部依赖（含 devDependencies，构建阶段需要）
 # 使用 BuildKit cache mount 加速 pnpm store
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
@@ -50,8 +47,6 @@ COPY . .
 #   - auth-client.ts 客户端使用 window.location.origin，不依赖编译时常量
 #   - 所有密钥/配置均通过 docker-compose environment 运行时传入
 
-# Prisma generate 需要 DATABASE_URL，构建时使用临时值
-ENV DATABASE_URL="file:./build.db"
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
