@@ -48,20 +48,14 @@ const createPrismaClient = () => {
     const adapter = new PrismaLibSQL(libsql)
     return new PrismaClient({ adapter })
   } else {
-    // Local SQLite Adapter
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3")
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const Database = require("better-sqlite3")
-
+    // Local SQLite - Use standard Prisma Client
+    // This avoids "better-sqlite3" adapter issues in strict build environments (Vercel)
+    // and works with the standard query engine.
     const databaseUrl = process.env.DATABASE_URL || "file:./dev.db"
-    // Extract filename from "file:./dev.db" -> "./dev.db"
-    const filename = databaseUrl.replace(/^file:/, "")
 
-    const db = new Database(filename)
-    const adapter = new PrismaBetterSqlite3(db)
-
-    return new PrismaClient({ adapter })
+    return new PrismaClient({
+      datasourceUrl: databaseUrl,
+    })
   }
 }
 
